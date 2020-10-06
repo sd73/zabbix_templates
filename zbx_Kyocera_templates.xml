@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2020-01-14T14:17:50Z</date>
+    <groups>
+        <group>
+            <name>Printers</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Kyocera Printers</template>
+            <name>Kyocera Printers</name>
+            <description>for printers FS-C8525MFP, ECOSYS M5521cdw</description>
+            <groups>
+                <group>
+                    <name>Printers</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Остаток расходных материалов</name>
+                </application>
+                <application>
+                    <name>Расходные материалы</name>
+                </application>
+                <application>
+                    <name>Сеть</name>
+                </application>
+                <application>
+                    <name>Система</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>Код ошибки</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
+                    <snmp_oid>1.3.6.1.2.1.25.3.5.1.2.1</snmp_oid>
+                    <key>ErrorCode</key>
+                    <delay>60</delay>
+                    <port>161</port>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Kyocera Printers (ErrorCode)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>HEX_TO_DECIMAL</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Модель</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>public</snmp_community>
+                    <snmp_oid>1.3.6.1.2.1.25.3.2.1.3.1</snmp_oid>
+                    <key>kyoceraModel</key>
+                    <delay>1d</delay>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Отпечатанно страниц</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
+                    <snmp_oid>1.3.6.1.4.1.1347.42.2.5.1.1.3.1</snmp_oid>
+                    <key>PageCounter</key>
+                    <delay>60</delay>
+                    <port>161</port>
+                    <description>Общее количество отпечатанных страниц</description>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Отсканировано страниц</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>public</snmp_community>
+                    <snmp_oid>1.3.6.1.4.1.1347.46.10.1.1.5.3</snmp_oid>
+                    <key>ScanCounter</key>
+                    <delay>60s</delay>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Серийный номер</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
+                    <snmp_oid>1.3.6.1.4.1.1347.43.5.1.1.28.1</snmp_oid>
+                    <key>SerialNumber</key>
+                    <delay>3600</delay>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <port>161</port>
+                    <inventory_link>SERIALNO_A</inventory_link>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Контактная информация</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
+                    <snmp_oid>1.3.6.1.2.1.1.4.0</snmp_oid>
+                    <key>sysContact</key>
+                    <delay>3600</delay>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <port>161</port>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Местоположение</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
+                    <snmp_oid>1.3.6.1.2.1.1.6.0</snmp_oid>
+                    <key>sysLocation</key>
+                    <delay>3600</delay>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <port>161</port>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Имя</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
+                    <snmp_oid>1.3.6.1.4.1.1347.40.10.1.1.5.1</snmp_oid>
+                    <key>sysName</key>
+                    <delay>3600</delay>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <port>161</port>
+                    <description>Имя устройства</description>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>Время работы</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
+                    <snmp_oid>1.3.6.1.2.1.1.3.0</snmp_oid>
+                    <key>UpTime</key>
+                    <delay>60</delay>
+                    <units>uptime</units>
+                    <description>Время работы с момента последнего включения</description>
+                    <applications>
+                        <application>
+                            <name>Система</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <params>0.01</params>
+                        </step>
+                    </preprocessing>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Network Discovery</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>public</snmp_community>
+                    <snmp_oid>discovery[{#SNMPVALUE},.1.3.6.1.2.1.2.2.1.1,{#NETNAME},.1.3.6.1.2.1.2.2.1.2]</snmp_oid>
+                    <key>netDiscovery</key>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Net #{#SNMPINDEX}:{#NETNAME} MAC-address</name>
+                            <type>SNMPV2</type>
+                            <snmp_community>public</snmp_community>
+                            <snmp_oid>1.3.6.1.2.1.2.2.1.6.{#SNMPINDEX}</snmp_oid>
+                            <key>netMacAddress[{#SNMPINDEX}]</key>
+                            <delay>15m</delay>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>Сеть</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Toner Discovery</name>
+                    <type>SNMPV2</type>
+                    <snmp_community>public</snmp_community>
+                    <snmp_oid>discovery[{#SNMPVALUE},.1.3.6.1.2.1.43.11.1.1.2.1,{#TCOLOR},.1.3.6.1.2.1.43.12.1.1.4.1,{#TMODEL},.1.3.6.1.2.1.43.11.1.1.6.1]</snmp_oid>
+                    <key>tonerDiskovery</key>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Картридж #{#SNMPINDEX} &quot;{#TCOLOR}&quot; - id</name>
+                            <type>SNMPV2</type>
+                            <snmp_community>public</snmp_community>
+                            <snmp_oid>1.3.6.1.2.1.43.11.1.1.3.1.{#SNMPINDEX}</snmp_oid>
+                            <key>3[{#SNMPINDEX}]</key>
+                            <applications>
+                                <application>
+                                    <name>Расходные материалы</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Картридж #{#SNMPINDEX} &quot;{#TCOLOR}&quot; - Модель</name>
+                            <type>SNMPV2</type>
+                            <snmp_community>public</snmp_community>
+                            <snmp_oid>1.3.6.1.2.1.43.11.1.1.6.1.{#SNMPINDEX}</snmp_oid>
+                            <key>cartridgeModel[{#SNMPINDEX}]</key>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>Расходные материалы</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Картридж #{#SNMPINDEX} &quot;{#TCOLOR}&quot; - Остаток тонера</name>
+                            <type>SNMPV2</type>
+                            <snmp_community>public</snmp_community>
+                            <snmp_oid>1.3.6.1.2.1.43.11.1.1.9.1.{#SNMPINDEX}</snmp_oid>
+                            <key>tonerLevel[{#SNMPINDEX}]</key>
+                            <applications>
+                                <application>
+                                    <name>Расходные материалы</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Картридж #{#SNMPINDEX} &quot;{#TCOLOR}&quot; - Максимальное количество тонера</name>
+                            <type>SNMPV2</type>
+                            <snmp_community>public</snmp_community>
+                            <snmp_oid>1.3.6.1.2.1.43.11.1.1.8.1.{#SNMPINDEX}</snmp_oid>
+                            <key>tonerMax[{#SNMPINDEX}]</key>
+                            <applications>
+                                <application>
+                                    <name>Расходные материалы</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Картридж #{#SNMPINDEX} {#TMODEL} &quot;{#TCOLOR}&quot; - Осталось тонера</name>
+                            <type>CALCULATED</type>
+                            <key>tonerPercent[{#SNMPINDEX}]</key>
+                            <units>%</units>
+                            <params>100*last(tonerLevel[{#SNMPINDEX}])/last(tonerMax[{#SNMPINDEX}])</params>
+                            <applications>
+                                <application>
+                                    <name>Остаток расходных материалов</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&lt;5</expression>
+                                    <name>Картридж #{#SNMPINDEX} &quot;{#TCOLOR}&quot; - Остаток тонера &lt; 5%</name>
+                                    <priority>AVERAGE</priority>
+                                    <manual_close>YES</manual_close>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <graph_prototypes>
+                        <graph_prototype>
+                            <name>Картридж #{#SNMPINDEX} &quot;{#TCOLOR}&quot; - Остаток тонера</name>
+                            <graph_items>
+                                <graph_item>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>Kyocera Printers</host>
+                                        <key>tonerPercent[{#SNMPINDEX}]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                    </graph_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <tags>
+                <tag>
+                    <tag>author</tag>
+                    <value>SD</value>
+                </tag>
+            </tags>
+        </template>
+    </templates>
+    <value_maps>
+        <value_map>
+            <name>Kyocera Printers (ErrorCode)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Норма</newvalue>
+                </mapping>
+                <mapping>
+                    <value>6</value>
+                    <newvalue>Застревание бумаги</newvalue>
+                </mapping>
+                <mapping>
+                    <value>11</value>
+                    <newvalue>Нет бумаги</newvalue>
+                </mapping>
+                <mapping>
+                    <value>12</value>
+                    <newvalue>Нужно заменить тонер</newvalue>
+                </mapping>
+                <mapping>
+                    <value>18</value>
+                    <newvalue>Нужно заменить тонер</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4096</value>
+                    <newvalue>Нужно заменить тонер</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>
