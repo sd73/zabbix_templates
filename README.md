@@ -1,5 +1,5 @@
 # zabbix_templates
-
+различные шаблоны для zabbix-а
 
 **sample.txt**  
 
