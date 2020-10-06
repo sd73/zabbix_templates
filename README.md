@@ -1,16 +1,20 @@
 # zabbix_templates
 
 
-sample.txt  
+**sample.txt**  
 
-template_apcupsd.xml  
+**template_apcupsd.xml**  
+**userparameter_apcupsd.conf**  
+шаблон и конфигурационный файл для мониоринга APCUPSd
 
-userparameter_apcupsd.conf  
+**zbx_Asustor NAS_templates.xml**  
+Asustor NAS AS1004T
 
-zbx_Asustor NAS_templates.xml  
+**zbx_Kyocera_templates.xml**  
+for printers FS-C8525MFP, ECOSYS M5521cdw
 
-zbx_Kyocera_templates.xml  
+**zbx_NetGear ReadyNAS 2100_templates.xml**  
+NetGear ReadyNAS 2100  
 
-zbx_NetGear ReadyNAS 2100_templates.xml  
-
-zbx_vm_vmware.xml  
+**zbx_vm_vmware.xml**  
+Шаблон для VMware виртуальных машин
