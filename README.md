@@ -16,5 +16,8 @@ for printers FS-C8525MFP, ECOSYS M5521cdw
 **zbx_NetGear ReadyNAS 2100_templates.xml**  
 NetGear ReadyNAS 2100  
 
+**zbx_esxi zabbix.docx**  
+инструкция по настройке мониторинга esxi-сервера
+
 **zbx_vm_vmware.xml**  
 Шаблон для VMware виртуальных машин
