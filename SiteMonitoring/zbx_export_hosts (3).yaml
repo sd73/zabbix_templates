@@ -1,0 +1,68 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-06-14T11:42:40Z'
+  groups:
+    -
+      uuid: 3faa64303d5f4bcd843bb88f6768e603
+      name: Sites
+  hosts:
+    -
+      host: neurochat.pro
+      name: neurochat.pro
+      templates:
+        -
+          name: 'Template Sites Monitoring'
+      groups:
+        -
+          name: Sites
+      interfaces:
+        -
+          interface_ref: if1
+      httptests:
+        -
+          name: neurochat.pro
+          delay: 5m
+          attempts: '3'
+          status: DISABLED
+          steps:
+            -
+              name: index
+              url: 'http://neurochat.pro/'
+              required: NEURO.CHAT
+              status_codes: '200'
+      inventory_mode: AUTOMATIC
+  triggers:
+    -
+      expression: 'avg(/neurochat.pro/web.test.fail[neurochat.pro],#3)>=1'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'last(/neurochat.pro/web.test.fail[neurochat.pro])=0'
+      name: 'Site neurochat.pro is down'
+      priority: HIGH
+      manual_close: 'YES'
+    -
+      expression: 'count(/neurochat.pro/web.test.time[neurochat.pro,index,resp],#7,"ge","1.5")>4'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'count(/neurochat.pro/web.test.time[neurochat.pro,index,resp],#3,"lt","1.5")>1'
+      name: 'Site neurochat.pro response time is too slow'
+      priority: WARNING
+      description: 'In last 5 reguests to site, 3 or more responses was more than 1500 ms.'
+      manual_close: 'YES'
+  graphs:
+    -
+      name: 'Download speed neurochat.pro'
+      width: '600'
+      graph_items:
+        -
+          color: 1A7C11
+          item:
+            host: neurochat.pro
+            key: 'web.test.in[neurochat.pro,index,bps]'
+    -
+      name: 'Response time neurochat.pro'
+      width: '600'
+      graph_items:
+        -
+          color: 1A7C11
+          item:
+            host: neurochat.pro
+            key: 'web.test.time[neurochat.pro,index,resp]'

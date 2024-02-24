@@ -1,0 +1,138 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    -
+      uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    -
+      uuid: 5e11b23fbb784344b07e60ea501cd7f9
+      template: TelegramID
+      name: TelegramID
+      groups:
+        -
+          name: Templates/Applications
+      items:
+        -
+          uuid: 3e5556cdbe7e483bac349c5e35320009
+          name: 'Код ошибки'
+          type: DEPENDENT
+          key: 'error_code[0]'
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.error_code
+              error_handler: CUSTOM_VALUE
+          master_item:
+            key: 'rawGetAPI[0]'
+          tags:
+            -
+              tag: component
+              value: telegram
+        -
+          uuid: 126cf60a207c4d489bd0082f7f6248f6
+          name: 'Описание ошибки'
+          type: DEPENDENT
+          key: 'error_description[0]'
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.description
+              error_handler: CUSTOM_VALUE
+          master_item:
+            key: 'rawGetAPI[0]'
+          tags:
+            -
+              tag: component
+              value: telegram
+        -
+          uuid: 041622493ef6487693e988c0a8782487
+          name: Статус
+          type: DEPENDENT
+          key: 'ok[0]'
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.ok
+          master_item:
+            key: 'rawGetAPI[0]'
+          tags:
+            -
+              tag: component
+              value: telegram
+          triggers:
+            -
+              uuid: 77c8484218114a0c98c1f0d0577af34e
+              expression: 'last(/TelegramID/ok[0])<>"true"'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/TelegramID/ok[0])="true"'
+              name: 'Ошибка проверки статуса'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: HIGH
+              description: |
+                При проверке API вернул ошибку. Возможно сменился ID группы или проблемы к доступу к API.
+                
+                Подробнее см. значение элемента данных "API Result"
+        -
+          uuid: bcb7f3d5c2414de38b4c136d756cbb20
+          name: 'API Result'
+          type: HTTP_AGENT
+          key: 'rawGetAPI[0]'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          url: 'https://api.telegram.org/{$TOKEN}/getChatMembersCount'
+          query_fields:
+            -
+              name: chat_id
+              value: '{$TLGID}'
+          status_codes: ''
+          tags:
+            -
+              tag: component
+              value: telegram
+        -
+          uuid: 1ae86058e2ea4c84847f3fda37e63c5e
+          name: 'Количество пользователей'
+          type: DEPENDENT
+          key: 'result[0]'
+          delay: '0'
+          history: 7d
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.result
+          master_item:
+            key: 'rawGetAPI[0]'
+          tags:
+            -
+              tag: component
+              value: telegram
+      macros:
+        -
+          macro: '{$TLGID}'
+          description: 'id-группы/канала/чата которую будем проверять'
+        -
+          macro: '{$TLGNAME}'
+          value: 'Telegram Group'
+          description: 'Имя группы/канала/чата которую будем проверять'
+        -
+          macro: '{$TOKEN}'
+          value: 'bot5419037539:AAH0HJHHDntRovkYIZE_PRZ_KlkT9pRZB94'
+          description: 'токен бота для обращения к API'

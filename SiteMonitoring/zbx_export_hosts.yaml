@@ -1,0 +1,71 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-06-14T09:47:40Z'
+  groups:
+    -
+      uuid: 3faa64303d5f4bcd843bb88f6768e603
+      name: Sites
+  hosts:
+    -
+      host: neurotrend.ru
+      name: neurotrend.ru
+      status: DISABLED
+      templates:
+        -
+          name: 'Template Sites Monitoring'
+      groups:
+        -
+          name: Sites
+      interfaces:
+        -
+          interface_ref: if1
+      httptests:
+        -
+          name: neurotrend.ru
+          delay: 5m
+          attempts: '3'
+          steps:
+            -
+              name: index
+              url: 'https://neurotrend.ru'
+              follow_redirects: 'NO'
+              required: 'Исследовательский центр Neurotrend'
+              status_codes: '200'
+      inventory_mode: AUTOMATIC
+  triggers:
+    -
+      expression: 'count(/neurotrend.ru/web.test.time[neurotrend.ru,index,resp],#7,"ge","1.5")>4'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'count(/neurotrend.ru/web.test.time[neurotrend.ru,index,resp],#3,"lt","1.5")>1'
+      name: 'Response time is too slow'
+      priority: WARNING
+      description: 'In last 5 reguests to site, 3 or more responses was more than 1500 ms.'
+      manual_close: 'YES'
+    -
+      expression: 'avg(/neurotrend.ru/web.test.fail[neurotrend.ru],#3)>=1'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'last(/neurotrend.ru/web.test.fail[neurotrend.ru])=0'
+      name: 'Site is down'
+      priority: HIGH
+      manual_close: 'YES'
+  graphs:
+    -
+      name: 'Download speed'
+      width: '600'
+      graph_items:
+        -
+          sortorder: '1'
+          color: 1A7C11
+          item:
+            host: neurotrend.ru
+            key: 'web.test.in[neurotrend.ru,index,bps]'
+    -
+      name: 'Response time'
+      width: '600'
+      graph_items:
+        -
+          sortorder: '1'
+          color: 1A7C11
+          item:
+            host: neurotrend.ru
+            key: 'web.test.rspcode[neurotrend.ru,index]'

@@ -1,0 +1,70 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-06-14T11:35:01Z'
+  groups:
+    -
+      uuid: 3faa64303d5f4bcd843bb88f6768e603
+      name: Sites
+  hosts:
+    -
+      host: moslab.neurotrend.ru
+      name: moslab.neurotrend.ru
+      templates:
+        -
+          name: 'Template Sites Monitoring'
+      groups:
+        -
+          name: Sites
+      interfaces:
+        -
+          interface_ref: if1
+      httptests:
+        -
+          name: 'web site moslab.neurotrend.ru'
+          delay: 5m
+          attempts: '3'
+          steps:
+            -
+              name: index
+              url: 'http://moslab.neurotrend.ru/#/login'
+              retrieve_mode: BOTH
+              required: '<title>Vue App</title>'
+              status_codes: '200'
+      inventory_mode: AUTOMATIC
+  triggers:
+    -
+      expression: 'avg(/moslab.neurotrend.ru/web.test.fail[web site moslab.neurotrend.ru],#3)>=1'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'last(/moslab.neurotrend.ru/web.test.fail[web site moslab.neurotrend.ru])=0'
+      name: 'Site moslab.neurotrend.ru is down'
+      priority: HIGH
+      manual_close: 'YES'
+    -
+      expression: 'count(/moslab.neurotrend.ru/web.test.time[web site moslab.neurotrend.ru,index,resp],#7,"ge","1.5")>4'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'count(/moslab.neurotrend.ru/web.test.time[web site moslab.neurotrend.ru,index,resp],#3,"lt","1.5")>1'
+      name: 'Site moslab.neurotrend.ru response time is too slow'
+      priority: WARNING
+      description: 'In last 5 reguests to site, 3 or more responses was more than 1500 ms.'
+      manual_close: 'YES'
+  graphs:
+    -
+      name: 'Download speed moslab.neurotrend.ru'
+      width: '600'
+      graph_items:
+        -
+          sortorder: '1'
+          color: 1A7C11
+          item:
+            host: moslab.neurotrend.ru
+            key: 'web.test.in[web site moslab.neurotrend.ru,index,bps]'
+    -
+      name: 'Response time moslab.neurotrend.ru'
+      width: '600'
+      graph_items:
+        -
+          sortorder: '1'
+          color: 1A7C11
+          item:
+            host: moslab.neurotrend.ru
+            key: 'web.test.time[web site moslab.neurotrend.ru,index,resp]'

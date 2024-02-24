@@ -21,3 +21,6 @@ NetGear ReadyNAS 2100
 
 **zbx_vm_vmware.xml**  
 Шаблон для VMware виртуальных машин
+
+
+

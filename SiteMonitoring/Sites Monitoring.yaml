@@ -1,0 +1,49 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-08-29T19:10:31Z'
+  groups:
+    -
+      uuid: 3faa64303d5f4bcd843bb88f6768e603
+      name: Sites
+  hosts:
+    -
+      host: expert-nko.ru
+      name: expert-nko.ru
+      templates:
+        -
+          name: 'Template Sites Monitoring'
+      groups:
+        -
+          name: Sites
+      interfaces:
+        -
+          interface_ref: if1
+      httptests:
+        -
+          name: expert-nko.ru
+          delay: 5m
+          attempts: '3'
+          steps:
+            -
+              name: index
+              url: 'http://expert-nko.ru'
+              follow_redirects: 'NO'
+              required: '"НП" ЭКСПЕРТ'
+              status_codes: '200'
+      inventory_mode: AUTOMATIC
+  triggers:
+    -
+      expression: 'count(/expert-nko.ru/web.test.time[expert-nko.ru,index,resp],#7,"ge","1.5")>4'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'count(/expert-nko.ru/web.test.time[expert-nko.ru,index,resp],#3,"lt","1.5")>1'
+      name: 'Response time is too slow'
+      priority: WARNING
+      description: 'In last 5 reguests to site, 3 or more responses was more than 1500 ms.'
+      manual_close: 'YES'
+    -
+      expression: 'avg(/expert-nko.ru/web.test.fail[expert-nko.ru],#3)>=1'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'last(/expert-nko.ru/web.test.fail[expert-nko.ru])=0'
+      name: 'Site is down'
+      priority: HIGH
+      manual_close: 'YES'

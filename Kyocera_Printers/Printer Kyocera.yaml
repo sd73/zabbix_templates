@@ -1,0 +1,274 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-08-29T19:09:35Z'
+  groups:
+    -
+      uuid: 58afa722676b4fba86702054223316d9
+      name: Templates/Printers
+  templates:
+    -
+      uuid: c4e3b475acbe40c6a984ad87a4d5e322
+      template: 'Template Printer Kyocera'
+      name: 'Template Printer Kyocera'
+      description: 'for printers FS-C8525MFP, ECOSYS M5521cdw'
+      groups:
+        -
+          name: Templates/Printers
+      items:
+        -
+          uuid: c2e551ef374e4a578dd75ef059182c43
+          name: 'Код ошибки'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.25.3.5.1.2.1
+          key: ErrorCode
+          delay: '60'
+          valuemap:
+            name: 'Kyocera Printers (ErrorCode)'
+          preprocessing:
+            -
+              type: HEX_TO_DECIMAL
+              parameters:
+                - ''
+          tags:
+            -
+              tag: Application
+              value: Система
+        -
+          uuid: ed44ce4184ad4482ac93fe378b7eab74
+          name: Модель
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.25.3.2.1.3.1
+          key: kyoceraModel
+          delay: 1d
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: Application
+              value: Система
+        -
+          uuid: 5072c89273324cc0974dba255d5456fb
+          name: 'Отпечатанно страниц'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.1347.42.2.5.1.1.3.1
+          key: PageCounter
+          delay: '60'
+          description: 'Общее количество отпечатанных страниц'
+          tags:
+            -
+              tag: Application
+              value: Система
+        -
+          uuid: 37c0bdc968754ee098aea6544b8cd4a5
+          name: 'Отсканировано страниц'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.1347.46.10.1.1.5.3
+          key: ScanCounter
+          delay: 60s
+          tags:
+            -
+              tag: Application
+              value: Система
+        -
+          uuid: c1eb67efb8d74d4188a5ef003942c241
+          name: 'Серийный номер'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.1347.43.5.1.1.28.1
+          key: SerialNumber
+          delay: '3600'
+          trends: '0'
+          value_type: TEXT
+          inventory_link: SERIALNO_A
+          tags:
+            -
+              tag: Application
+              value: Система
+        -
+          uuid: fc930284ab664bfeb3b93b2feb53273c
+          name: 'Контактная информация'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.4.0
+          key: sysContact
+          delay: '3600'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: Application
+              value: Система
+        -
+          uuid: b9b5240846594a00b200184832d8c848
+          name: Местоположение
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.6.0
+          key: sysLocation
+          delay: '3600'
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: Application
+              value: Система
+        -
+          uuid: 08b39d8c6c694425a89fb3a8c5f70616
+          name: Имя
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.1347.40.10.1.1.5.1
+          key: sysName
+          delay: '3600'
+          trends: '0'
+          value_type: TEXT
+          description: 'Имя устройства'
+          tags:
+            -
+              tag: Application
+              value: Система
+        -
+          uuid: da0770753d784174baabba3c9b9052a1
+          name: 'Время работы'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.3.0
+          key: UpTime
+          delay: '60'
+          units: uptime
+          description: 'Время работы с момента последнего включения'
+          preprocessing:
+            -
+              type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            -
+              tag: Application
+              value: Система
+      discovery_rules:
+        -
+          uuid: 4a9f9e2486264aaaab6391132f99d6c4
+          name: 'Network Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},.1.3.6.1.2.1.2.2.1.1,{#NETNAME},.1.3.6.1.2.1.2.2.1.2]'
+          key: netDiscovery
+          item_prototypes:
+            -
+              uuid: f8372583a1ba4f10b15ba53d5c3e5089
+              name: 'Net #{#SNMPINDEX}:{#NETNAME} MAC-address'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.6.{#SNMPINDEX}'
+              key: 'netMacAddress[{#SNMPINDEX}]'
+              delay: 15m
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: Сеть
+        -
+          uuid: f062e77c20b04a2a8bd22e784858644f
+          name: 'Toner Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SNMPVALUE},.1.3.6.1.2.1.43.11.1.1.2.1,{#TCOLOR},.1.3.6.1.2.1.43.12.1.1.4.1,{#TMODEL},.1.3.6.1.2.1.43.11.1.1.6.1]'
+          key: tonerDiskovery
+          item_prototypes:
+            -
+              uuid: ff8e86db54034a779b649abfb12de587
+              name: 'Картридж #{#SNMPINDEX} "{#TCOLOR}" - id'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.43.11.1.1.3.1.{#SNMPINDEX}'
+              key: '3[{#SNMPINDEX}]'
+              tags:
+                -
+                  tag: Application
+                  value: 'Расходные материалы'
+            -
+              uuid: 4acee32a0a8c4ea289c4136f23a2be56
+              name: 'Картридж #{#SNMPINDEX} "{#TCOLOR}" - Модель'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.43.11.1.1.6.1.{#SNMPINDEX}'
+              key: 'cartridgeModel[{#SNMPINDEX}]'
+              trends: '0'
+              value_type: TEXT
+              tags:
+                -
+                  tag: Application
+                  value: 'Расходные материалы'
+            -
+              uuid: bcc696c5ace94a4499a92bee3bbb95f8
+              name: 'Картридж #{#SNMPINDEX} "{#TCOLOR}" - Остаток тонера'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.43.11.1.1.9.1.{#SNMPINDEX}'
+              key: 'tonerLevel[{#SNMPINDEX}]'
+              tags:
+                -
+                  tag: Application
+                  value: 'Расходные материалы'
+            -
+              uuid: 9a648dfcc95a4e8095acf9adcbe7f8f4
+              name: 'Картридж #{#SNMPINDEX} "{#TCOLOR}" - Максимальное количество тонера'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.43.11.1.1.8.1.{#SNMPINDEX}'
+              key: 'tonerMax[{#SNMPINDEX}]'
+              tags:
+                -
+                  tag: Application
+                  value: 'Расходные материалы'
+            -
+              uuid: eef0eb1f3513497e9d668ec76075202a
+              name: 'Картридж #{#SNMPINDEX} {#TMODEL} "{#TCOLOR}" - Осталось тонера'
+              type: CALCULATED
+              key: 'tonerPercent[{#SNMPINDEX}]'
+              units: '%'
+              params: '100*last(//tonerLevel[{#SNMPINDEX}])/last(//tonerMax[{#SNMPINDEX}])'
+              tags:
+                -
+                  tag: Application
+                  value: 'Остаток расходных материалов'
+              trigger_prototypes:
+                -
+                  uuid: c28a72757c9d4a6b9359fee7abed1637
+                  expression: 'last(/Template Printer Kyocera/tonerPercent[{#SNMPINDEX}])<5'
+                  name: 'Картридж #{#SNMPINDEX} "{#TCOLOR}" - Остаток тонера < 5%'
+                  priority: AVERAGE
+                  manual_close: 'YES'
+                -
+                  uuid: 1a83fca7691d42a6b934e7c6707d41be
+                  expression: 'last(/Template Printer Kyocera/tonerPercent[{#SNMPINDEX}])<15'
+                  name: 'Картридж #{#SNMPINDEX} "{#TCOLOR}" - Остаток тонера < 15%'
+                  priority: WARNING
+                  manual_close: 'YES'
+          graph_prototypes:
+            -
+              uuid: eacf4e0631194c46a6081db1b584b812
+              name: 'Картридж #{#SNMPINDEX} "{#TCOLOR}" - Остаток тонера'
+              graph_items:
+                -
+                  color: 1A7C11
+                  item:
+                    host: 'Template Printer Kyocera'
+                    key: 'tonerPercent[{#SNMPINDEX}]'
+      tags:
+        -
+          tag: author
+          value: SD
+      valuemaps:
+        -
+          uuid: 77dcb848e0a6474b918257deb0fd41d0
+          name: 'Kyocera Printers (ErrorCode)'
+          mappings:
+            -
+              value: '0'
+              newvalue: Норма
+            -
+              value: '6'
+              newvalue: 'Застревание бумаги'
+            -
+              value: '11'
+              newvalue: 'Нет бумаги'
+            -
+              value: '12'
+              newvalue: 'Нужно заменить тонер'
+            -
+              value: '18'
+              newvalue: 'Нужно заменить тонер'
+            -
+              value: '4096'
+              newvalue: 'Нужно заменить тонер'

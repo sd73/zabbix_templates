@@ -1,0 +1,388 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-07-31T17:18:50Z'
+  groups:
+    -
+      uuid: 3dcd5bbe90534f9e8eb5c2d53756af63
+      name: Templates/Power
+  templates:
+    -
+      uuid: 4507dfcfde794a4fbbc91a21ecfe1476
+      template: APCUPSd
+      name: APCUPSd
+      description: 'Шаблон APCUPSd'
+      groups:
+        -
+          name: Templates/Power
+      discovery_rules:
+        -
+          uuid: fa6a2f91d88840b2acc0352d15e5ea88
+          name: 'APCUPSd UPS discovery'
+          key: apcupsd.name.discovery
+          item_prototypes:
+            -
+              uuid: 42dfe789b15a4ffeb4f8d1ab976721a4
+              name: 'Задержка подачи сигнала при пропадании питания ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.alarmdel["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              units: Сек.
+              description: 'Задержка подачи сигнала при пропадании питания'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: d5db0fc1686a4821a6b7fae066951b22
+              name: 'Дата изготовления батареи ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.battdate["{#APCUPSDNAME}"]'
+              delay: 6h
+              history: 30d
+              trends: '0'
+              value_type: TEXT
+              description: 'дата изготовления батареи (необходимо менять вручную)'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: ba1abe6c25ec4e8babd8266d6d991fb0
+              name: 'Текущее напряжение на батарее ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.battv["{#APCUPSDNAME}"]'
+              delay: 1h
+              value_type: FLOAT
+              units: В
+              description: 'Текущее напряжение на батарее'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 1f56731b6e9e4154aa5c4537137e293a
+              name: 'Уровень заряда батареи ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.bcharge["{#APCUPSDNAME}"]'
+              delay: 1h
+              units: '%'
+              description: 'Уровень заряда батареи'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 25ed9c029ebe4e9bb6ac116ed7a0d7a5
+              name: 'Суммарное время работы от батареи ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.cumonbatt["{#APCUPSDNAME}"]'
+              delay: 10m
+              value_type: FLOAT
+              units: Сек.
+              description: 'Суммарное время работы от батареи'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: fbf5d32c081e468988240c6446a34416
+              name: 'Прошивка ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.firmware["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              value_type: TEXT
+              description: 'версия firmware ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: bf1c5f9d806445ac8d084d4dfab737e5
+              name: 'Напряжение, допустимое на входе (верхнее) ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.hitrans["{#APCUPSDNAME}"]'
+              delay: 6h
+              value_type: FLOAT
+              units: В
+              description: hitrans
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: f3b0547a10d8423f9db8f5fcc649be46
+              name: 'Температура ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.itemp["{#APCUPSDNAME}"]'
+              delay: 1h
+              value_type: FLOAT
+              units: °C
+              description: 'Внутренняя температура ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 18a627e783054acaa84315b1defdafa3
+              name: 'Причина последнего изменения состояния ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.lastxfer["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              value_type: TEXT
+              description: 'Причина последнего изменения состояния'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: bcd68ce9872748eab8f20e72fb884be4
+              name: 'Напряжение на входе ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.linev["{#APCUPSDNAME}"]'
+              delay: 10m
+              value_type: FLOAT
+              units: В
+              description: 'Текущее напряжение на входе ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 4f4fdb182702418c9a1bdb72ac2dbc49
+              name: 'Уровень нагрузки ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.loadpct["{#APCUPSDNAME}"]'
+              delay: 1h
+              value_type: FLOAT
+              units: '%'
+              description: 'Уровень нагрузки ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 6237176e95664302bbd11470a92ebda8
+              name: 'Напряжение, допустимое на входе (нижнее) ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.lotrans["{#APCUPSDNAME}"]'
+              delay: 6h
+              value_type: FLOAT
+              units: В
+              description: 'Напряжение, допустимое на входе (нижнее)'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 5f3fefcac35c4773a862556cb745439d
+              name: 'Модель ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.model["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              value_type: TEXT
+              description: 'Модель ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 7db4261d03c54061b2c181258ad6748d
+              name: 'Напряжение, нормальное на батарее ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.nombattv["{#APCUPSDNAME}"]'
+              delay: 1h
+              value_type: FLOAT
+              units: В
+              description: 'Напряжение, нормальное на батарее'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 6bc1b33cb46841f7892fce48370899c5
+              name: 'Напряжение, нормальное на выходе ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.nominv["{#APCUPSDNAME}"]'
+              delay: 1h
+              value_type: FLOAT
+              units: В
+              description: 'Напряжение, нормальное на выходе'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 858fbc13c31a4d3090c00e8312cf021e
+              name: 'Максимальная мощность на которую рассчитан ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.nompower["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              units: Ватт
+              description: 'Максимальная мощность на которую рассчитан'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 9372f6534ab14caeab27776cd1aef33d
+              name: 'Количество переходов на питание от батареи с момента запуска apcupsd ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.numxfers["{#APCUPSDNAME}"]'
+              delay: 1h
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: f422c32d03a14f94b4b4d270cfd897db
+              name: 'Уровень чувствительности ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.sense["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              value_type: TEXT
+              description: 'Уровень чувствительности ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 33faba06a70c4f2697aa089e2f647106
+              name: 'Серийный номер ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.serialno["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              value_type: TEXT
+              description: 'Серийный номер ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 58c1ae4573614c74ac0a3b37e2eed77b
+              name: 'Текущий статус ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.status["{#APCUPSDNAME}"]'
+              delay: 10m
+              trends: '0'
+              value_type: TEXT
+              description: 'Текущий статус ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+              trigger_prototypes:
+                -
+                  uuid: 7b86adcd536f42bf8bfe41c25e4bcbc8
+                  expression: 'find(/APCUPSd/apcupsd.status["{#APCUPSDNAME}"],,"regexp","NOBATT")=1'
+                  name: 'Батареи отсутствуют {#APCUPSDNAME}:'
+                  priority: HIGH
+                  description: 'Нужно подключить батареи'
+                  type: MULTIPLE
+                -
+                  uuid: a5a2efdecf8143a5becfecafbfe298fb
+                  expression: 'find(/APCUPSd/apcupsd.status["{#APCUPSDNAME}"],,"regexp","REPLACEBATT")=1'
+                  name: 'Замените батареи {#APCUPSDNAME}:'
+                  priority: HIGH
+                  description: 'Нужно подключить батареи'
+                  type: MULTIPLE
+                -
+                  uuid: 4befee2e6562483da32f8e00da146636
+                  expression: 'find(/APCUPSd/apcupsd.status["{#APCUPSDNAME}"],,"regexp","ONBATT")=1'
+                  name: 'Работа от батарей {#APCUPSDNAME}:'
+                  priority: INFO
+                  description: 'ИБП работет от батарей'
+                  type: MULTIPLE
+            -
+              uuid: 49a531eb6c104b888896fed91365bab0
+              name: 'Предполагаемое время работы на батарее ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.timeleft["{#APCUPSDNAME}"]'
+              value_type: FLOAT
+              units: Мин.
+              description: 'Предполагаемое время работы на батарее'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 0198b2334ae34f03872d70bdea5db11f
+              name: 'Текущее время работы от батареи ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.tonbatt["{#APCUPSDNAME}"]'
+              value_type: FLOAT
+              units: Сек.
+              description: 'Текущее время работы от батареи'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: d57b56f702274a30b6b440eed63fb8bb
+              name: 'Имя ИБП {#APCUPSDNAME}:'
+              key: 'apcupsd.upsname["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              value_type: TEXT
+              description: 'Имя ИБП'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 50d6ac2c60cb46c78d4c013a2c77740c
+              name: 'Последний переход на работу с батареи на сеть {#APCUPSDNAME}:'
+              key: 'apcupsd.xoffbatt["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              value_type: TEXT
+              description: 'Последний переход на работу с батареи на сеть'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+            -
+              uuid: 66835990d468491f9031583f101844b6
+              name: 'Последний переход на работу от батареи {#APCUPSDNAME}:'
+              key: 'apcupsd.xonbatt["{#APCUPSDNAME}"]'
+              delay: 1h
+              trends: '0'
+              value_type: TEXT
+              description: 'Последний переход на работу от батареи'
+              tags:
+                -
+                  tag: Application
+                  value: APCUPSd
+          graph_prototypes:
+            -
+              uuid: bbe3ca2543b5466ab90fbff5a20d3e4e
+              name: 'Внутренняя температура ИБП {#APCUPSDNAME}:'
+              graph_items:
+                -
+                  color: F63100
+                  calc_fnc: ALL
+                  item:
+                    host: APCUPSd
+                    key: 'apcupsd.itemp["{#APCUPSDNAME}"]'
+            -
+              uuid: a03e565459d741b4846cfe498d49ac2a
+              name: 'Напряжение на входе ИБП {#APCUPSDNAME}:'
+              graph_items:
+                -
+                  color: 00FF00
+                  calc_fnc: ALL
+                  item:
+                    host: APCUPSd
+                    key: 'apcupsd.linev["{#APCUPSDNAME}"]'
+            -
+              uuid: 03263fbae7674b8f83953897d95e1adb
+              name: 'Уровень нагрузки ИБП {#APCUPSDNAME}:'
+              graph_items:
+                -
+                  color: 1A7C11
+                  calc_fnc: ALL
+                  item:
+                    host: APCUPSd
+                    key: 'apcupsd.loadpct["{#APCUPSDNAME}"]'
+          preprocessing:
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  arr = value.split('\n')
+                  s = []
+                  for (var i in arr) {
+                     s.push({"{#APCUPSDNAME}": arr[i]})
+                  }
+                  return JSON.stringify(s)
+      tags:
+        -
+          tag: Application
+          value: APCUPSd
+        -
+          tag: Author
+          value: SD

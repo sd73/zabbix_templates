@@ -1,0 +1,127 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-06-14T11:30:10Z'
+  groups:
+    -
+      uuid: 3faa64303d5f4bcd843bb88f6768e603
+      name: Sites
+  hosts:
+    -
+      host: classificator.neurochat.ru
+      name: classificator.neurochat.ru
+      status: DISABLED
+      templates:
+        -
+          name: 'Template Sites Monitoring'
+      groups:
+        -
+          name: Sites
+      interfaces:
+        -
+          interface_ref: if1
+      httptests:
+        -
+          name: classificator.neurochat.ru
+          delay: 5m
+          attempts: '3'
+          steps:
+            -
+              name: index
+              url: 'http://classificator.neurochat.ru/'
+              follow_redirects: 'NO'
+              retrieve_mode: BOTH
+              required: '"status": "OK"'
+              status_codes: '200'
+      inventory_mode: AUTOMATIC
+    -
+      host: srv.neurochat.ru
+      name: srv.neurochat.ru
+      status: DISABLED
+      templates:
+        -
+          name: 'Template Sites Monitoring'
+      groups:
+        -
+          name: Sites
+      interfaces:
+        -
+          interface_ref: if1
+      httptests:
+        -
+          name: srv.neurochat.ru
+          delay: 5m
+          attempts: '3'
+          steps:
+            -
+              name: index
+              url: 'http://srv.neurochat.ru/'
+              required: Neurochat
+              status_codes: '200'
+      inventory_mode: AUTOMATIC
+  triggers:
+    -
+      expression: 'avg(/classificator.neurochat.ru/web.test.fail[classificator.neurochat.ru],#3)>=1'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'last(/classificator.neurochat.ru/web.test.fail[classificator.neurochat.ru])=0'
+      name: 'Site classificator.neurochat.ru is down'
+      priority: HIGH
+      manual_close: 'YES'
+    -
+      expression: 'count(/classificator.neurochat.ru/web.test.time[classificator.neurochat.ru,index,resp],#7,"ge","1.5")>4'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'count(/classificator.neurochat.ru/web.test.time[classificator.neurochat.ru,index,resp],#3,"lt","1.5")>1'
+      name: 'Site classificator.neurochat.ru response time is too slow'
+      priority: WARNING
+      description: 'In last 5 reguests to site, 3 or more responses was more than 1500 ms.'
+      manual_close: 'YES'
+    -
+      expression: 'avg(/srv.neurochat.ru/web.test.fail[srv.neurochat.ru],#3)>=1'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'last(/srv.neurochat.ru/web.test.fail[srv.neurochat.ru])=0'
+      name: 'Site srv.neurochat.ru is down'
+      priority: HIGH
+      manual_close: 'YES'
+    -
+      expression: 'count(/srv.neurochat.ru/web.test.time[srv.neurochat.ru,index,resp],#7,"ge","1.5")>4'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'count(/srv.neurochat.ru/web.test.time[srv.neurochat.ru,index,resp],#3,"lt","1.5")>1'
+      name: 'Site srv.neurochat.ru Response time is too slow'
+      priority: WARNING
+      description: 'In last 5 reguests to site, 3 or more responses was more than 1500 ms.'
+      manual_close: 'YES'
+  graphs:
+    -
+      name: 'Download speed classificator.neurochat.ru'
+      width: '600'
+      graph_items:
+        -
+          color: 1A7C11
+          item:
+            host: classificator.neurochat.ru
+            key: 'web.test.in[classificator.neurochat.ru,index,bps]'
+    -
+      name: 'Download speed srv.neurochat.ru'
+      width: '600'
+      graph_items:
+        -
+          color: 1A7C11
+          item:
+            host: srv.neurochat.ru
+            key: 'web.test.in[srv.neurochat.ru,index,bps]'
+    -
+      name: 'Response time classificator.neurochat.ru'
+      graph_items:
+        -
+          color: 1A7C11
+          item:
+            host: classificator.neurochat.ru
+            key: 'web.test.time[classificator.neurochat.ru,index,resp]'
+    -
+      name: 'Response time srv.neurochat.ru'
+      width: '600'
+      graph_items:
+        -
+          color: 1A7C11
+          item:
+            host: srv.neurochat.ru
+            key: 'web.test.time[srv.neurochat.ru,index,resp]'

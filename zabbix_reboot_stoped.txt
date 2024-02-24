@@ -1,0 +1,59 @@
+Zabbix — A stop job is running for Zabbix Server
+
+Столкнулся с ошибкой при перезагрузке сервера с Zabbix (Debian 10.1, Zabbix 4.2). Возникает судя по всему данная ошибка из-за того что служба MySQL (в моем случае MariaDB) при перезагрузке выключается раньше Zabbix. Соответственно похоже что возникать такая проблема может только в случае если и Zabbix сервер и база данных запущены на одной машине.
+
+Решение — дописать в файл запуска службы zabbix-server зависимость от mysql.service.
+
+Я использую nano, так что для меня это:
+
+sudo nano /lib/systemd/system/zabbix-server.service
+
+Оригинал файла службы выглядит так:
+
+[Unit]
+Description=Zabbix Server
+After=syslog.target
+After=network.target
+
+[Service]
+Environment="CONFFILE=/etc/zabbix/zabbix_server.conf"
+EnvironmentFile=-/etc/default/zabbix-server
+Type=forking
+Restart=on-failure
+PIDFile=/run/zabbix/zabbix_server.pid
+KillMode=control-group
+ExecStart=/usr/sbin/zabbix_server -c $CONFFILE
+ExecStop=/bin/kill -SIGTERM $MAINPID
+RestartSec=10s
+TimeoutSec=infinity
+
+[Install]
+WantedBy=multi-user.target
+
+В блок [Unit] необходимо добавить:
+
+Wants=mysql.service
+After=mysql.service
+
+или
+
+Wants=postgresql.service
+After=postgresql.service
+
+смотря какой SQL сервер вы используете. В итоге блок Unit будет выглядеть например так:
+
+[Unit]
+Description=Zabbix Server
+After=syslog.target
+After=network.target
+Wants=mysql.service
+After=mysql.service
+
+Далее закрываем редактор, не забывая сохранить изменения. Для nano нажимаем выход — Ctr+X подтверждаем сохранение буфера в активный файл — Y и соглашаемся с именем файла — Enter
+
+Обновляем демона systemd и перезапускаем zabbix-server:
+
+sudo systemctl daemon-reload
+sudo systemctl restart zabbix-server
+
+На этом все, на данный момент работает без сбоев =).
