@@ -1,0 +1,115 @@
+ELTEX-DHCP DEFINITIONS ::= BEGIN
+
+-- Title:      ELTEX DHCP Extension Private
+-- Version:    1.0
+-- Date:       10-Nov-2020
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, IpAddress         FROM SNMPv2-SMI
+    eltMesDhcp                                      FROM ELTEX-MES
+    VlanList1, VlanList2, VlanList3, VlanList4      FROM RADLAN-BRIDGEMIBOBJECTS-MIB
+    rlDhcpRelayNextServerEntry,
+    rlDhcpRelayInterfaceEntry                       FROM RADLAN-DHCP-MIB;
+
+--
+-- DHCP Relay
+--
+eltMesDhcpRelay OBJECT IDENTIFIER ::= { eltMesDhcp 1 }
+
+--
+-- DHCP Relay server table
+--
+eltDhcpRelayNextServerTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltDhcpRelayNextServerEntry
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The DHCP Relay Next Servers configuration Table."
+    ::= { eltMesDhcpRelay 4 }
+
+eltDhcpRelayNextServerEntry OBJECT-TYPE
+    SYNTAX      EltDhcpRelayNextServerEntry
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "The row definition for this table.
+        Parameters of DHCP requests are relayed to the
+        specified next server according to vlan interface."
+    AUGMENTS    { rlDhcpRelayNextServerEntry }
+    ::= { eltDhcpRelayNextServerTable 1 }
+
+EltDhcpRelayNextServerEntry ::= SEQUENCE {
+    eltDhcpRelayNextServerListVlanId1To1024      VlanList1,
+    eltDhcpRelayNextServerListVlanId1025To2048   VlanList2,
+    eltDhcpRelayNextServerListVlanId2049To3072   VlanList3,
+    eltDhcpRelayNextServerListVlanId3073To4094   VlanList4
+}
+
+eltDhcpRelayNextServerListVlanId1To1024 OBJECT-TYPE
+    SYNTAX  VlanList1
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+       " DHCP relay server VlanId List 1."
+    ::= { eltDhcpRelayNextServerEntry 1 }
+
+eltDhcpRelayNextServerListVlanId1025To2048 OBJECT-TYPE
+    SYNTAX  VlanList2
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+       " DHCP relay server VlanId List 2."
+    ::= { eltDhcpRelayNextServerEntry 2 }
+
+eltDhcpRelayNextServerListVlanId2049To3072 OBJECT-TYPE
+    SYNTAX  VlanList3
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+       " DHCP relay server VlanId List 3."
+    ::= { eltDhcpRelayNextServerEntry 3 }
+
+eltDhcpRelayNextServerListVlanId3073To4094 OBJECT-TYPE
+    SYNTAX  VlanList4
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+       " DHCP relay server VlanId List 4."
+    ::= { eltDhcpRelayNextServerEntry 4 }
+
+--
+-- DHCP Relay Interface Table
+--
+
+eltDhcpRelayInterfaceTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltDhcpRelayInterfaceEntry
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "The enabled DHCP Relay Interface Table."
+    ::= { eltMesDhcpRelay 5 }
+
+eltDhcpRelayInterfaceEntry OBJECT-TYPE
+    SYNTAX      EltDhcpRelayInterfaceEntry
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "The row definition for this table.  The user can add entry when DHCP relay is enabled on Interface."
+    AUGMENTS    { rlDhcpRelayInterfaceEntry }
+    ::= { eltDhcpRelayInterfaceTable 1 }
+
+EltDhcpRelayInterfaceEntry ::= SEQUENCE {
+    eltDhcpRelayInterfaceGatewayAddr    IpAddress
+}
+
+eltDhcpRelayInterfaceGatewayAddr OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+       "Gateway ip address per interface."
+    DEFVAL {'00000000'H}
+    ::= { eltDhcpRelayInterfaceEntry 1 }
+
+END
+

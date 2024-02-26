@@ -1,0 +1,153 @@
+Marvell-ComponentMapper-MIB DEFINITIONS ::= BEGIN
+
+-- Version:              1.0
+-- Date:                 8-Jan-2019
+
+IMPORTS
+    OBJECT-TYPE, MODULE-IDENTITY,
+    NOTIFICATION-TYPE                                       FROM SNMPv2-SMI
+    DisplayString                                           FROM SNMPv2-TC
+    rnd                                                     FROM RADLAN-MIB;
+    
+rlComponentMapper  MODULE-IDENTITY
+                       LAST-UPDATED "201903210000Z"
+                       ORGANIZATION "Marvell Semiconductor, Inc."
+                       CONTACT-INFO
+							"5488 Marvell Lane
+							Santa Clara, CA 95054
+							USA
+							Website:  www.marvell.com"
+                       DESCRIPTION
+                            "The private MIB module definition for Hardware & software components."
+                       REVISION "201904030000Z"
+                       DESCRIPTION
+                            "Initial version of this MIB."
+                       ::= { rnd 243 }
+
+ComponentType ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION    "Component type."
+    SYNTAX INTEGER {
+        cpu(1),
+        packetProcessor(2),
+        phy(3),
+        flash(4),
+        sfp(5),
+        poe(6),
+        cpld(7),
+        image(8),
+        kernel(9),
+        bootloader(10),
+        fanController(11),
+        ssh(12),
+        ssl(13)
+}
+
+rlComponentMapperTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF RlComponentMapperEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "For each module (board) there is an entry describing its hardware & software info in this
+         module"
+    ::= { rlComponentMapper 1 }
+
+rlComponentMapperEntry OBJECT-TYPE
+    SYNTAX      RlComponentMapperEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A entry of this table specifies a module (board)"
+    INDEX  { rlComponentMapperUnitNum, rlComponentMapperType, rlComponentMapperIndex}
+    ::= { rlComponentMapperTable 1 }
+
+RlComponentMapperEntry ::= SEQUENCE {
+    rlComponentMapperUnitNum            INTEGER,
+    rlComponentMapperType               ComponentType,
+    rlComponentMapperIndex              INTEGER,
+    rlComponentMapperVendorID           DisplayString,
+    rlComponentMapperDeviceID           DisplayString,
+    rlComponentMapperHardwareVersionID  DisplayString,
+    rlComponentMapperSoftwareVersionID  DisplayString,
+    rlComponentMapperAliasID            DisplayString
+}    
+    
+rlComponentMapperUnitNum OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "The unit number (for stackable devices) or 1 for 'stand alone' device."
+    ::= {rlComponentMapperEntry 1 }
+
+rlComponentMapperType OBJECT-TYPE
+    SYNTAX          ComponentType
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "Hardware or Software Type:
+            cpu(1),
+            packetProcessor(2),
+            phy(3),
+            flash(4),
+            sfp(5),
+            poe(6),
+            cpld(7),
+            image(8),
+            kernel(9),
+            bootloader(10),
+            fanController(11),
+            ssh(12),
+            ssl(13)
+        "
+    ::= {rlComponentMapperEntry 2 }
+    
+rlComponentMapperIndex OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+        "The index of the component."
+    ::= {rlComponentMapperEntry 3}
+    
+rlComponentMapperVendorID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS      read-only
+    STATUS      current
+    DESCRIPTION
+        "The vendor of the wanted component."
+    ::= {rlComponentMapperEntry 4 }
+    
+rlComponentMapperDeviceID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS      read-only
+    STATUS      current
+    DESCRIPTION
+        "The Device ID of the wanted component."
+    ::= {rlComponentMapperEntry 5 }
+
+rlComponentMapperHardwareVersionID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS      read-only
+    STATUS      current
+    DESCRIPTION
+        "The hardware version/revision of the wanted component."
+    ::= {rlComponentMapperEntry 6 }
+
+rlComponentMapperSoftwareVersionID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS      read-only
+    STATUS      current
+    DESCRIPTION
+        "The software version/revision of the wanted component."
+    ::= {rlComponentMapperEntry 7 }     
+  
+rlComponentMapperAliasID OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS      read-only
+    STATUS      current
+    DESCRIPTION
+        "Alias for identical component type with different name."
+    ::= {rlComponentMapperEntry 8 }      
+END
+ 

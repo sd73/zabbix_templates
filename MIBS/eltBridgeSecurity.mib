@@ -1,0 +1,175 @@
+ELTEX-MES-BRIDGE-SECURITY DEFINITIONS ::= BEGIN
+
+-- Version:    2.2
+-- Date:       20-Oct-2021
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE,
+    Unsigned32, IpAddress, Counter32,
+    NOTIFICATION-TYPE                               FROM SNMPv2-SMI
+    InterfaceIndex, ifIndex                         FROM IF-MIB
+    RowStatus, TEXTUAL-CONVENTION, MacAddress,
+    DisplayString, TruthValue                       FROM SNMPv2-TC
+    eltMes, eltMesBridgeSecurity                    FROM ELTEX-MES
+    rlIpDhcpOpt82SuboptionConfigEntry               FROM RADLAN-BRIDGE-SECURITY-A;
+
+
+
+eltIpDhcpOpt82                 OBJECT IDENTIFIER ::= { eltMesBridgeSecurity 1 }
+
+--
+-- Common types
+--
+EltOpt82CombinationType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Specifies circuit id suboptions template for option 82."
+    SYNTAX      INTEGER {
+                  sp(1),
+                  sv(2),
+                  pv(3),
+                  spv(4),
+                  bin(5),
+                  user-defined(6)
+                }
+
+EltOpt82DelimiterType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Specifies circuit id delimiter suboptions templates for option 82."
+    SYNTAX      INTEGER {
+                  tr101(1),
+                  dot(2),
+                  comma(3),
+                  semicolon(4),
+                  hash(5),
+                  slash(6),
+                  space(7)
+                }
+
+EltIpDhcpOpt82SuboptionInsertType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Whether the behavior is to permit or deny."
+    SYNTAX      INTEGER {
+                  enable(1),
+                  disable(2)
+                }
+
+EltOpt82PortInsertionType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Specifies per IfIndex a DHCP option 82 insertion enable state."
+    SYNTAX      INTEGER {
+                  global(1),
+                  enable(2),
+                  disable(3)
+                }
+
+--
+-- DHCP Option 82
+--
+
+--
+-- DHCP option 82 Augment.
+--
+-- This MIB for configuring the special templates of option 82.
+--
+
+eltIpDhcpOpt82Table OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltIpDhcpOpt82Entry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The table for configure special temlates of option 82."
+    ::= { eltIpDhcpOpt82 1 }
+
+eltIpDhcpOpt82Entry OBJECT-TYPE
+    SYNTAX      EltIpDhcpOpt82Entry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Entry configures option 82 for protocol DHCP."
+    AUGMENTS { rlIpDhcpOpt82SuboptionConfigEntry }
+    ::= { eltIpDhcpOpt82Table 1 }
+
+EltIpDhcpOpt82Entry ::= SEQUENCE {
+    eltIpDhcpOpt82AccessNodeIdentifier                DisplayString,
+    eltIpDhcpOpt82CircuitIdSuboptionsCombination      EltOpt82CombinationType,
+    eltIpDhcpOpt82CircuitIdSuboptionsDelimeter        EltOpt82DelimiterType,
+    eltIpDhcpOpt82SuboptionInsert                     EltIpDhcpOpt82SuboptionInsertType
+}
+
+eltIpDhcpOpt82AccessNodeIdentifier OBJECT-TYPE
+    SYNTAX       DisplayString(SIZE(0..48))
+    MAX-ACCESS   read-write
+    STATUS       current
+    DESCRIPTION  "Specifies an access node identifier used by PPPoE IA. This value
+                  is only used if eltIpDhcpOpt82CircuitIdSuboptionsCombination is
+                  not 'user defined' or 'bin'."
+    DEFVAL       { "" }
+    ::= { eltIpDhcpOpt82Entry 1 }
+
+eltIpDhcpOpt82CircuitIdSuboptionsCombination OBJECT-TYPE
+    SYNTAX       EltOpt82CombinationType
+    MAX-ACCESS   read-write
+    STATUS       current
+    DESCRIPTION  "Specifies circuit id suboption that will be inserted to a client packet.
+                  If eltIpDhcpOpt82CircuitIdSuboptionsCombination is set to 'user-defined',
+                  the circuit id configuration is set using the
+                  rlIpDhcpOpt82SuboptionConfigCircuitIdFormat field."
+    DEFVAL       { spv }
+    ::= { eltIpDhcpOpt82Entry 2 }
+
+eltIpDhcpOpt82CircuitIdSuboptionsDelimeter OBJECT-TYPE
+    SYNTAX       EltOpt82DelimiterType
+    MAX-ACCESS   read-write
+    STATUS       current
+    DESCRIPTION  "Specifies a char symbol that will delimit circuit id suboption.
+                  This value is only used if eltIpDhcpOpt82CircuitIdSuboptionsCombination is
+                  not 'user defined' or 'bin'."
+    DEFVAL       { tr101 }
+    ::= { eltIpDhcpOpt82Entry 3 }
+
+eltIpDhcpOpt82SuboptionInsert OBJECT-TYPE
+    SYNTAX       EltIpDhcpOpt82SuboptionInsertType
+    MAX-ACCESS   read-write
+    STATUS       current
+    DESCRIPTION  "Enable/disable adding subtypes for circuit id and remote id."
+    DEFVAL       { disable }
+    ::= { eltIpDhcpOpt82Entry 4 }
+
+--
+--  eltIpDhcpOpt82PortTable
+--
+
+eltIpDhcpOpt82PortTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF EltIpDhcpOpt82PortEntry
+    MAX-ACCESS   not-accessible
+    STATUS       current
+    DESCRIPTION  "A DHCP interface configuration table."
+    ::= { eltIpDhcpOpt82 2 }
+
+eltIpDhcpOpt82PortEntry OBJECT-TYPE
+   SYNTAX       EltIpDhcpOpt82PortEntry
+   MAX-ACCESS   not-accessible
+   STATUS       current
+   DESCRIPTION  "A DHCP interface configuration entry."
+   INDEX        {ifIndex}
+::= { eltIpDhcpOpt82PortTable 1 }
+
+EltIpDhcpOpt82PortEntry ::= SEQUENCE {
+   eltIpDhcpOpt82PortRowStatus                     RowStatus,
+   eltIpDhcpOpt82PortInsertion                     EltOpt82PortInsertionType
+}
+
+eltIpDhcpOpt82PortRowStatus OBJECT-TYPE
+    SYNTAX       RowStatus
+    MAX-ACCESS   read-only
+    STATUS       current
+    DESCRIPTION  "Session row status."
+    ::= { eltIpDhcpOpt82PortEntry 2 }
+
+eltIpDhcpOpt82PortInsertion OBJECT-TYPE
+    SYNTAX       EltOpt82PortInsertionType
+    MAX-ACCESS   read-write
+    STATUS       current
+    DESCRIPTION  "Specifies per IfIndex a DHCP option 82 insertion enable state."
+    DEFVAL { global }
+    ::= { eltIpDhcpOpt82PortEntry 3 }
+
+END

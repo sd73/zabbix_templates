@@ -1,0 +1,77 @@
+ELTEX-MES-VRF DEFINITIONS ::= BEGIN
+
+-- Title:      ELTEX MES VRF Private Extension
+-- Version:    1.0
+-- Date:       25 Nov 2020
+
+IMPORTS
+    eltMes                                                  FROM ELTEX-MES
+    rlInetRoutingDistanceEntry                              FROM RADLAN-IPv6
+    OBJECT-TYPE, Unsigned32                                 FROM SNMPv2-SMI
+    TruthValue, DisplayString, RowStatus                    FROM SNMPv2-TC;
+
+eltMesVRF MODULE-IDENTITY
+       LAST-UPDATED "202011250000Z"
+       ORGANIZATION "Eltex Enterprise Co, Ltd."
+       CONTACT-INFO
+            "www.eltex.nsk.ru"
+       DESCRIPTION
+            "The private MIB module definition for VRF MIB."
+       REVISION "202011250000Z"
+       DESCRIPTION
+            "Initial version of this MIB."
+       ::= { eltMes 113 }
+
+eltMirTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF EltMirEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "A list of the MRIDs instances."
+    ::= { eltMesVRF 1 }
+
+eltMirEntry OBJECT-TYPE
+    SYNTAX  EltMirEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "An entry of this table specifies the MRID assignement to a name."
+    INDEX  { eltMirMrid }
+    ::= { eltMirTable 1 }
+
+EltMirEntry ::= SEQUENCE {
+    eltMirMrid          INTEGER,
+    eltMirName          OCTET STRING,
+    eltMirStatus        RowStatus
+}
+
+eltMirMrid OBJECT-TYPE
+    SYNTAX      INTEGER (2..251)
+    MAX-ACCESS      read-write
+    STATUS      current
+    DESCRIPTION
+        "The MRID for which this entry contains information."
+    ::= { eltMirEntry 1 }
+
+eltMirName OBJECT-TYPE
+    SYNTAX  OCTET STRING (SIZE (1..32))
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "Mrid name."
+    ::= { eltMirEntry 2 }
+    
+    
+
+eltMirStatus OBJECT-TYPE
+    SYNTAX  RowStatus
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+       "The status of a table entry.
+        Only three statuses are aceptable: CreateAndGo to create,
+        Active to update,Destroy to delete. All other values cause error."
+    ::= { eltMirEntry 3 }
+
+END
+

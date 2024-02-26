@@ -1,0 +1,168 @@
+ELTEX-MES-VLAN-MIB DEFINITIONS ::= BEGIN
+
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Eltex MES VLAN
+-- FILE NAME: eltVlan.mib
+-- DATE     : 2013/11/18
+-- VERSION  : 1.00
+-- -----------------------------------------------------------------------------
+
+IMPORTS
+    rnd                                         FROM RADLAN-MIB
+    DisplayString, TruthValue, RowStatus,
+    MacAddress                                  FROM SNMPv2-TC
+    VlanIndex, dot1qVlanIndex, PortList         FROM Q-BRIDGE-MIB
+    ifIndex                                     FROM IF-MIB
+    dot1dBasePort                               FROM BRIDGE-MIB
+    SnmpAdminString                             FROM SNMP-FRAMEWORK-MIB
+    MODULE-IDENTITY, OBJECT-TYPE, IpAddress     FROM SNMPv2-SMI
+    InetAddressType                             FROM INET-ADDRESS-MIB
+    eltMes                                      FROM ELTEX-MES
+    rldot1qPortVlanStaticEntry,
+    vlanMulticastTvEntry                        FROM RADLAN-vlan-MIB;
+
+eltMesVlan MODULE-IDENTITY
+              LAST-UPDATED "201808070000Z"
+              ORGANIZATION "Eltex Ltd."
+              CONTACT-INFO
+                      "www.eltex.nsk.ru"
+              DESCRIPTION
+                      "The private MIB module definition for IP Multicast support in Eltex devices."
+              REVISION "201808070000Z"
+              DESCRIPTION
+                       "Add default VLAN forbidden ports scalar"
+              REVISION "201706050000Z"
+              DESCRIPTION
+                       "Add VLAN CoS priority"
+              REVISION "201311180000Z"
+              DESCRIPTION
+                       "Editorial changes to support new MIB compilers."
+               REVISION "201311180000Z"
+              DESCRIPTION
+                      "Initial version of this MIB."
+          ::= { eltMes 5 }
+
+EltVlanMode ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+       "Indicates global VLAN QinQ operation mode."
+    REFERENCE
+       "TR-101"
+    SYNTAX      INTEGER {
+                    basic(1),
+                    tr101(2)
+                }
+
+eltVlanMulticastTvTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltVlanMulticastTvEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Multicast vlan used for this port"
+    ::= { eltMesVlan 1 }
+
+eltVlanMulticastTvEntry OBJECT-TYPE
+    SYNTAX      EltVlanMulticastTvEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Entry of multicast tag"
+    AUGMENTS { vlanMulticastTvEntry }
+    ::= { eltVlanMulticastTvTable 1 }
+
+EltVlanMulticastTvEntry ::= SEQUENCE {
+        eltVlanMulticastTvVIDIsTagged  TruthValue
+}
+
+eltVlanMulticastTvVIDIsTagged OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+         "Specify whether the port is tagged in TV vlan or not."
+    ::= { eltVlanMulticastTvEntry  1 }
+
+eltdot1qPortVlanStaticTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF Eltdot1qPortVlanStaticEntry
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "A table containing static vlan port membership information."
+    ::= { eltMesVlan 7 }
+
+eltdot1qPortVlanStaticEntry OBJECT-TYPE
+    SYNTAX      Eltdot1qPortVlanStaticEntry
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Static vlan membership information per port"
+    AUGMENTS { rldot1qPortVlanStaticEntry }
+    ::= { eltdot1qPortVlanStaticTable 1 }
+
+Eltdot1qPortVlanStaticEntry ::= SEQUENCE {
+    eltdot1qVlanStaticTrunkAllowedVlanAll
+        TruthValue
+}
+
+eltdot1qVlanStaticTrunkAllowedVlanAll OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This field indicates whether the bridge should assign all
+         available static VLANs to a port automatically."
+    ::= { eltdot1qPortVlanStaticEntry 1 }
+
+eltVlanMode OBJECT-TYPE
+    SYNTAX      EltVlanMode
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Global VLAN QinQ operation mode"
+    ::= { eltMesVlan 2 }
+
+--
+-- eltDot1qVlanStaticTable
+--
+
+eltDot1qVlanStaticTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltDot1qVlanStaticEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table lists the per vlan parameters."
+    ::= { eltMesVlan 4 }
+
+eltDot1qVlanStaticEntry OBJECT-TYPE
+    SYNTAX      EltDot1qVlanStaticEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table expands existing table dot1qVlanStaticTable."
+    INDEX   {dot1qVlanIndex}
+    ::= { eltDot1qVlanStaticTable 1 }
+
+EltDot1qVlanStaticEntry ::= SEQUENCE {
+        eltDot1qVlanStaticCos  INTEGER
+}
+
+eltDot1qVlanStaticCos OBJECT-TYPE
+    SYNTAX      INTEGER (0..7 | 255)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+         "Vlan egress CoS value for traffic being sent from CPU."
+    DEFVAL {255}
+    ::= { eltDot1qVlanStaticEntry  1 }
+
+eltMesVlanDefault  OBJECT IDENTIFIER ::= { eltMesVlan 5 }
+
+eltVlanDefaultForbiddenPorts OBJECT-TYPE
+    SYNTAX  PortList
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "List of default VLAN membership disabled ports."
+    ::= { eltMesVlanDefault 1 }
+
+END

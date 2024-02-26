@@ -1,0 +1,32 @@
+ELTEX-MES-COUNTERS-MIB DEFINITIONS ::= BEGIN
+
+-- Title:         Eltex MES Counters Configuration
+-- Version:       1.0
+-- Creation date: 17 Aug 2020
+-- Last update:   17 Aug 2020
+
+IMPORTS
+    eltMesCountersMIB      FROM ELTEX-MES-MNG-MIB
+    OBJECT-TYPE            FROM SNMPv2-SMI
+    TruthValue             FROM SNMPv2-TC;
+
+eltMesCountersMIBObjects    OBJECT IDENTIFIER ::= { eltMesCountersMIB 1 }
+eltMesCountersGlobal        OBJECT IDENTIFIER ::= { eltMesCountersMIBObjects 1 }
+eltMesCountersQos           OBJECT IDENTIFIER ::= { eltMesCountersGlobal 1 }
+
+
+------------------------------------------
+-- QoS Statistics
+------------------------------------------
+
+eltCountersQosStatisticsEnable OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "Enable or disable QosStatistics."
+    DEFVAL { false }
+    ::= { eltMesCountersQos 1 }
+
+
+END

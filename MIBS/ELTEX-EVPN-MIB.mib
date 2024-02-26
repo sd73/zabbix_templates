@@ -1,0 +1,1460 @@
+ELTEX-EVPN-MIB DEFINITIONS ::= BEGIN
+
+  IMPORTS
+    MODULE-IDENTITY,
+    OBJECT-TYPE,
+    Unsigned32
+      FROM SNMPv2-SMI
+
+    VlanIdOrNone
+      FROM RLLAN1-MIB
+
+    TEXTUAL-CONVENTION,
+    DisplayString,
+    RowStatus,
+    MacAddress,
+    TruthValue
+      FROM SNMPv2-TC
+
+    InterfaceIndexOrZero,
+    InterfaceIndex
+      FROM IF-MIB
+
+    InetAddressType,
+    InetAddress
+      FROM INET-ADDRESS-MIB
+
+    NumericIndex
+      FROM RADLAN-PIM-MIB
+
+    eltexLtd
+      FROM ELTEX-SMI-ACTUAL;
+
+  eltexEvpnMIB MODULE-IDENTITY
+    LAST-UPDATED "202108120000Z" -- Th Aug 12 00:00:00 GMT 2021
+    ORGANIZATION "Eltex Enterprise Co, Ltd."
+    CONTACT-INFO 
+        "www.eltex.nsk.ru"
+    DESCRIPTION  
+        "The MIB module for management of the VxLAN/EVPN protocols."
+
+  ::= { eltexLtd 56 }
+
+-------------------------------------------------------------------------------
+-- Textual Conventions.
+
+  VniOrNone ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Virtual Network Identifier."
+    SYNTAX  INTEGER (0..16777214)
+
+  EltexEvpnAdminStatus ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "The desired administrative state of an entry."
+    SYNTAX      INTEGER {
+                  adminStatusUp(1),
+                  adminStatusDown(2)
+                }
+
+  EsNumberOrNone ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "Ethernet Segment number."
+    SYNTAX  INTEGER (0..16777214)
+    
+  EvpnEsType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Ethernet Segment type from RFC7432."
+    SYNTAX      INTEGER {
+                  esTypeArbitrary(0),
+                  esTypeLacp(1),
+                  esTypeStp(2),
+                  esTypeMac(3),
+                  esTypeOperator(4),
+                  esTypeAs(5)
+                }
+
+  EltexEvpnRouteTarget ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "The representation of route target value."
+    SYNTAX       OCTET STRING (SIZE (8))
+
+  EltexEvpnRouteTargetType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "The representation of route target type."
+    SYNTAX      INTEGER {
+                  routeTargetImport(1),
+                  routeTargetExport(2),
+                  routeTargetBoth(3)
+                }
+
+  EltexEvpnMcastModeType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Locally configured multicast mode."
+    SYNTAX      INTEGER {
+                  ingressReplication(1), -- Ingress replication.
+                  pimAsm(2)              -- PIM-ASM multicast group.
+                }
+
+  EltexEvpnEsStatusType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Status values for an Ethernet Segment or interface in an
+                 Ethernet Segment."
+    SYNTAX      INTEGER {
+                  up(1),
+                  down(2)
+                }
+
+  EltexEvpnEsModeTc ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Operational mode for an Ethernet Segment.
+                 Only single-homing and all-active multi-homing modes
+                 are supported."
+    SYNTAX      INTEGER {
+                  singleHomed(1),
+                  allActive(2)
+                }
+
+  EltexEvpnRouteDistinguisher ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Syntax for a route distinguisher."
+    SYNTAX      OCTET STRING (SIZE (8))
+
+  EltexEvpnOperStatus ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION "Operational status of an EVPN object."
+    SYNTAX      INTEGER {
+                  operStatusUp(1),       -- active
+                  operStatusDown(2),     -- inactive
+                  operStatusGoingUp(3),  -- activating
+                  operStatusGoingDown(4),-- deactivating
+                  operStatusActFailed(5) -- activation failed
+                }
+
+  EltexEvpnVxlanOperReason ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION "A reason for the current oper status of an VxLAN instance."
+    SYNTAX      INTEGER {
+                  none(1),                 -- Oper status is up or going up.
+                                           -- No reason is required.
+                  bgpNotUp(2),             -- Oper status is down or going
+                                           -- down because BGP protocol is down.
+                  adminConfig(3),          -- Oper status is down or going down
+                                           -- because of the VxLAN instance row
+                                           -- status or admin status
+                                           -- configuration.
+                  resourceFailure(4),      -- Oper status is failed or failed
+                                           -- perm due to insufficient
+                                           -- resources.
+                  noIfInfo(5),             -- Oper status is down or going down
+                                           -- because the VxLAN instance does not have
+                                           -- all of the interface information
+                                           -- required to activate.
+                  vxlanInstanceNotUp(6),   -- Oper status is down or going down
+                                           -- because the VxLAN instance is
+                                           -- not oper up.
+                  noRouteDistinguisher(7), -- Oper status is not up because no
+                                           -- route distinguisher is available.
+                  routeDistinguisherClash(8),
+                                           -- Oper status is not up because
+                                           -- there is an active VxLAN instance
+                                           -- with the same route
+                                           -- distinguisher.
+                  noEsi(9),                -- Oper status is not up because no
+                                           -- Ethernet Segment Identifier
+                                           -- is available.
+                  badVni(10),              -- Oper status is not up because a
+                                           -- valid VNI is not available.
+                  vniClash(11),            -- Oper status is not up because
+                                           -- there is another VxLAN instance
+                                           -- with the same VNI.
+                  vlanSubIfVxlanClash(12), -- Oper status is not up because
+                                           -- multiple VLAN sub-interfaces have
+                                           -- been configured for the same VxLAN
+                                           -- instance on the same Ethernet Segment.
+                  noBgpId(13),             -- Oper status is not up because
+                                           -- because the BGP router identifier
+                                           -- is not yet available to EVPN.
+                  rtTypeClash(14),         -- Oper status is not up because a
+                                           -- configured RT and the auto-
+                                           -- derived RT have the same RT value
+                                           -- but different RT types.
+                  noRouteTarget(15),       -- Oper status is not up because
+                                           -- there are no configured RTs.
+                  evpnIpVrfNotUp(16),      -- Oper status is down or going down
+                                           -- because the IP VRF instance is
+                                           -- not oper up.
+                  evpnNoSystemMac(17),     -- Oper status is down or going down
+                                           -- because the system mac address is
+                                           -- unknown.
+                  rtClash(18),             -- Oper status is not up because there
+                                           -- is an another active RT configured
+                                           -- with the same route target value.
+                  evpnNoMcastGroup(19),    -- Oper status is down or going down
+                                           -- because the multicast mode
+                                           -- requires a group address, but one
+                                           -- has not been supplied.
+                  evpnNoSourceIp(20),      -- Oper status is down or going down
+                                           -- because there is no available
+                                           -- source ip.
+                  evpnBadTnnlDestType(21), -- Oper status is down or going down
+                                           -- because the VxLAN tunnel
+                                           -- destination type is invalid.
+                  evpnNoRoutersMac(22),    -- Oper status is down or going down
+                                           -- because a routers mac is not
+                                           -- available.
+                  evpnRestartInProgress(23),
+                                           -- Oper status is down because there
+                                           -- is a restart in progress.
+                  evpnNoMcastLabel(24),    -- Oper status is down or going down
+                                           -- because MPLS multicast is
+                                           -- enabled, but no multicast label
+                                           -- exists.
+                  evpnNoPerFdbLabel(25),   -- Oper status is down or going down
+                                           -- because no per-FDB label exists.
+                  evpnNoMplsLabel(26),
+                                           -- Oper status is down or going down
+                                           -- because an MPLS label is not
+                                           -- available.
+                  evpnEsiClash(27)
+                                           -- Oper status is not up because the
+                                           -- ESI for this Ethernet Segment clashes
+                                           -- with that of another local Ethernet
+                                           -- Segment.
+                }
+
+  EltexEvpnOperReason ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "A reason for the current oper status of an EVPN object."
+    SYNTAX      INTEGER {
+                  none(1),                 -- Oper status is up or going up.
+                                           -- No reason is required.
+                  entityNotUp(2),          -- Oper status is down or going
+                                           -- down because the entity is not
+                                           -- oper up.
+                  adminConfig(3),          -- Oper status is down or going down
+                                           -- because of the object's row
+                                           -- status or admin status
+                                           -- configuration.
+                  resourceFailure(4),      -- Oper status is failed or failed
+                                           -- perm due to insufficient
+                                           -- resources.
+                  noIfInfo(5),             -- Oper status is down or going down
+                                           -- because the object does not have
+                                           -- all of the interface information
+                                           -- required to activate.
+                  eviNotUp(6),             -- Oper status is down or going down
+                                           -- because the EVPN instance is not
+                                           -- oper up.
+                  evpnBdNotUp(7),          -- Oper status is down or going down
+                                           -- because the EVPN bridge domain is
+                                           -- not oper up.
+                  noRouteDistinguisher(8), -- Oper status is not up because no
+                                           -- route distinguisher is available.
+                  routeDistinguisherClash(9),
+                                           -- Oper status is not up because
+                                           -- there is an active EVPN instance
+                                           -- with the same route
+                                           -- distinguisher.
+                  noEsi(10),               -- Oper status is not up because no
+                                           -- Ethernet Segment Identifier
+                                           -- is available.
+                  badVni(11),              -- Oper status is not up because a
+                                           -- valid VNI is not available.
+                  vniClash(12),            -- Oper status is not up because
+                                           -- there is another BD with the same
+                                           -- VNI.
+                  vlanSubIfEviClash(13),   -- Oper status is not up because
+                                           -- multiple VLAN sub-interfaces have
+                                           -- been configured for the same EVI
+                                           -- on the same Ethernet Segment.
+                  noBgpId(14),             -- Oper status is not up because
+                                           -- because the BGP router identifier
+                                           -- is not yet available to EVPN.
+                  rtTypeClash(15),         -- Oper status is not up because a
+                                           -- configured RT and the auto-
+                                           -- derived RT have the same RT value
+                                           -- but different RT types.
+                  noRouteTarget(16),       -- Oper status is not up because
+                                           -- there are no configured RTs.
+                  evpnIpVrfNotUp(17),      -- Oper status is down or going down
+                                           -- because the IP VRF instance is
+                                           -- not oper up.
+                  evpnNoSystemMac(18),     -- Oper status is down or going down
+                                           -- because the system mac address is
+                                           -- unknown.
+                  rtClash(19),             -- Oper status is not up because there
+                                           -- is an another active RT configured
+                                           -- with the same route target value.
+                  evpnNoMcastGroup(20),    -- Oper status is down or going down
+                                           -- because the multicast mode
+                                           -- requires a group address, but one
+                                           -- has not been supplied.
+                  evpnNoSourceIp(21),      -- Oper status is down or going down
+                                           -- because there is no available
+                                           -- source ip.
+                  evpnBadTnnlDestType(22), -- Oper status is down or going down
+                                           -- because the VXLAN tunnel
+                                           -- destination type is invalid.
+                  evpnNoRoutersMac(23),    -- Oper status is down or going down
+                                           -- because a routers mac is not
+                                           -- available.
+                  evpnRestartInProgress(24),
+                                           -- Oper status is down because there
+                                           -- is arestart in progress.
+                  evpnNoMcastLabel(25),    -- Oper status is down or going down
+                                           -- because MPLS multicast is
+                                           -- enabled, but no multicast label
+                                           -- exists.
+                  evpnNoPerFdbLabel(26),   -- Oper status is down or going down
+                                           -- because no per-FDB label exists.
+                  evpnNoMplsLabel(27),
+                                           -- Oper status is down or going down
+                                           -- because an MPLS label is not
+                                           -- available.
+                  evpnEsiClash(28)
+                                           -- Oper status is not up because the
+                                           -- ESI for this Ethernet Segment clashes
+                                           -- with that of another local Ethernet
+                                           -- Segment.
+                }
+
+
+  EltexEvpnSource ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "The source of an EVPN route.
+
+                 -  'local' indicates that the EVPN route was created based
+                    on information from locally attached sites.
+
+                 -  'remote' indicates that the EVPN route was received from
+                    a remote EVPN instance."
+    SYNTAX      INTEGER {
+                  local(1),
+                  remote(2)
+                }
+
+  EltexEvpnESI ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "Syntax for an Ethernet Segment Identifier."
+    SYNTAX      OCTET STRING (SIZE (10))
+
+  EltexEvpnPmsiTnnlType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION "The tunnel type for forwarding BUM traffic for a
+                 bridge domain."
+    SYNTAX      INTEGER {
+                  ingressReplication(1), -- Ingress replication.
+                  pimAsm(2),             -- PIM-ASM multicast group.
+                  pimBidir(3),           -- PIM-BIDIR multicast group.
+                  pimSsm(4),             -- PIM-SSM multicast group.
+                  other(5)               -- Any other type.
+               }
+-------------------------------------------------------------------------------
+
+  eltexEvpnObjects    OBJECT IDENTIFIER ::= { eltexEvpnMIB 1 }
+
+  eltexEvpnVxlan      OBJECT IDENTIFIER ::= { eltexEvpnObjects 1 }
+
+  eltexEvpnEs         OBJECT IDENTIFIER ::= { eltexEvpnObjects 2 }
+
+  eltexEvpnIpVrf      OBJECT IDENTIFIER ::= { eltexEvpnObjects 3 }
+
+  eltexEvpnRoute      OBJECT IDENTIFIER ::= { eltexEvpnObjects 4 }
+
+--
+-- VxLAN instance table.
+--
+-- This table is responsible for storing configuration of VxLAN instance.
+-- All primary configuration of VxLAN instance, including VxLAN and VLAN binding
+-- should be made through this table.
+
+  eltexEvpnVxlanTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnVxlanEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Each entry of this table represents primary configuration
+                 of certain VxLAN instance."
+    ::= { eltexEvpnVxlan 1 }
+
+  eltexEvpnVxlanEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnVxlanEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Represents a primary configuration of VxLAN instance."
+    INDEX       { eltexEvpnVxlanIndex }
+    ::= { eltexEvpnVxlanTable 1 }
+
+  EltexEvpnVxlanEntry ::= SEQUENCE {
+      eltexEvpnVxlanIndex                    Unsigned32,
+      eltexEvpnVxlanRowStatus                RowStatus,
+      eltexEvpnVxlanAdminStatus              EltexEvpnAdminStatus,
+      eltexEvpnVxlanVni                      VniOrNone,
+      eltexEvpnVxlanVlanId                   VlanIdOrNone,
+      eltexEvpnVxlanName                     DisplayString,
+      eltexEvpnVxlanMcastMode                EltexEvpnMcastModeType,
+      eltexEvpnVxlanMcastGpAddressType       InetAddressType,
+      eltexEvpnVxlanMcastGpAddress           InetAddress,
+      eltexEvpnVxlanRd                       EltexEvpnRouteDistinguisher,
+      eltexEvpnVxlanAutoRt                   EltexEvpnRouteTarget,
+      eltexEvpnVxlanOperStatus               EltexEvpnOperStatus,
+      eltexEvpnVxlanOperReason               EltexEvpnVxlanOperReason,
+      eltexEvpnVxlanVniIpRouting             TruthValue
+    }
+
+  eltexEvpnVxlanIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "An index that identifies a VxLAN instance entry."
+    ::= { eltexEvpnVxlanEntry 1 }
+
+  eltexEvpnVxlanRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "The row status of VxLAN Instance table entry. Should be
+                 used to create and destroy table entries."
+    ::= { eltexEvpnVxlanEntry 2 }
+
+  eltexEvpnVxlanAdminStatus OBJECT-TYPE
+    SYNTAX      EltexEvpnAdminStatus
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "The administrative status of VxLAN instance. Should be 
+                 used to activate and deactivate instance."
+    DEFVAL      { adminStatusUp }
+    ::= { eltexEvpnVxlanEntry 3 }
+
+  eltexEvpnVxlanVni OBJECT-TYPE
+    SYNTAX      VniOrNone
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Virtual Network Identifier.
+                 Should be used to determine VxLAN segment and encapsulated
+                 packet's VNI number."
+    ::= { eltexEvpnVxlanEntry 4 }
+
+  eltexEvpnVxlanVlanId OBJECT-TYPE
+    SYNTAX      VlanIdOrNone
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "ID of a VLAN interface from which incoming packets
+                 should be encapsulated."
+    ::= { eltexEvpnVxlanEntry 5 }
+
+  eltexEvpnVxlanName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(1..64))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "A string that identifies VxLAN instance."
+    ::= { eltexEvpnVxlanEntry 6 }
+
+  eltexEvpnVxlanMcastMode OBJECT-TYPE
+    SYNTAX      EltexEvpnMcastModeType
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "Multicast mode used by this bridge-domain."
+    DEFVAL { ingressReplication }
+    ::= { eltexEvpnVxlanEntry 7 }
+
+  eltexEvpnVxlanMcastGpAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "The type of IP multicast group address to be used for
+                 BUM traffic for a VXLAN Bridge Domain. The address is
+                 required if eltexEvpnVxlanMcastMode is 'pimAsm'.
+
+                 Note that the multicast configuration must be consistent
+                 across all routers in the VNI."
+    DEFVAL { unknown }
+    ::= { eltexEvpnVxlanEntry 8 }
+
+  eltexEvpnVxlanMcastGpAddress OBJECT-TYPE
+    SYNTAX      InetAddress (SIZE(0|4|16))
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "The IP multicast group address to be used for BUM traffic
+                 for a VXLAN Bridge Domain.  The address is required if
+                 eltexEvpnVxlanMcastMode is 'pimAsm'."
+    DEFVAL { ''h }
+    ::= { eltexEvpnVxlanEntry 9 }
+
+  eltexEvpnVxlanRd OBJECT-TYPE
+    SYNTAX      EltexEvpnRouteDistinguisher
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The route distinguisher in use for this VxLAN instance."
+    ::= { eltexEvpnVxlanEntry 10 }
+
+  eltexEvpnVxlanAutoRt OBJECT-TYPE
+    SYNTAX      EltexEvpnRouteTarget
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The auto-derived route target for this VxLAN instance.
+
+                 Set to all zeros if EVPN does not have the information
+                 required to derive the value."
+    ::= { eltexEvpnVxlanEntry 11 }
+
+  eltexEvpnVxlanOperStatus OBJECT-TYPE
+    SYNTAX      EltexEvpnOperStatus
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Operational status of the VxLAN instance."
+    ::= { eltexEvpnVxlanEntry 12 }
+
+  eltexEvpnVxlanOperReason OBJECT-TYPE
+    SYNTAX      EltexEvpnVxlanOperReason
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The reason for the VxLAN instance to be in its current oper
+                 status, if the instance is not active or activating."
+    ::= { eltexEvpnVxlanEntry 13 }
+
+  eltexEvpnVxlanVniIpRouting OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "Indicates that vni used for VXLAN encapsulation
+                 of IP packets routed in VRF IP-VRF."
+    DEFVAL      { false }
+    ::= { eltexEvpnVxlanEntry 14 }
+
+-------------------------------------------------------------------------------
+
+--
+-- VxLAN name to instance table.
+--
+-- The purpose of this table is to search VxLAN instance entry index by name.
+-- Because VxLAN instances are identified by name in CLI, the search of VxLAN
+-- instance entry through SNMP protocol/engine can be inhibited. This table
+-- should simplify the search of an entry by allowing user to find VxLAN instance
+-- index by name.
+
+  eltexEvpnVxlanNameToIndexTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnVxlanNameToIndexEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Each entry of this table contains VxLAN instance name and index
+                 pairs for auxiliary purposes."
+    ::= { eltexEvpnVxlan 2 }
+
+  eltexEvpnVxlanNameToIndexEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnVxlanNameToIndexEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Entry that contains VxLAN instance name and index pairs for
+                 auxiliary purposes."
+    INDEX       { eltexEvpnVxlanNameToIndexName }
+    ::= { eltexEvpnVxlanNameToIndexTable 1 }
+ 
+  EltexEvpnVxlanNameToIndexEntry ::= SEQUENCE {
+      eltexEvpnVxlanNameToIndexName   DisplayString,
+      eltexEvpnVxlanNameToIndexIndex  Unsigned32
+    }
+
+  eltexEvpnVxlanNameToIndexName OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE(1..64))
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "A string that identifies VxLAN instance."
+    ::= { eltexEvpnVxlanNameToIndexEntry 1 }
+
+  eltexEvpnVxlanNameToIndexIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "An index that identifies a VxLAN instance entry."
+    ::= { eltexEvpnVxlanNameToIndexEntry 2 }
+
+-------------------------------------------------------------------------------
+
+--
+-- First free index scalar value.
+--
+-- This scalar contains the next precalculated VxLAN instance index that will
+-- be used in case of configuration of VxLAN instance through CLI.
+
+  eltexEvpnVxlanFirstFreeIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The next precalculated VxLAN instance index that will
+                 be used in case of configuration of VxLAN instance through CLI."
+    ::= { eltexEvpnVxlan 3 }
+
+-------------------------------------------------------------------------------
+
+--
+-- VxLAN route target table.
+--
+-- This table is responsible for storing configuration of route target for certain
+-- VxLAN instance. Each VxLAN instance can have multiple route targets configured.
+
+  eltexEvpnVxlanRouteTargetTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnVxlanRouteTargetEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Each entry of this table represents route target configuration
+                 for certain VxLAN instance."
+    ::= { eltexEvpnVxlan 4 }
+
+  eltexEvpnVxlanRouteTargetEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnVxlanRouteTargetEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Represents route target configuration for certain VxLAN instance."
+    INDEX       { eltexEvpnVxlanIndex,
+                  eltexEvpnVxlanRouteTarget }
+    ::= { eltexEvpnVxlanRouteTargetTable 1 }
+
+  EltexEvpnVxlanRouteTargetEntry ::= SEQUENCE {
+      eltexEvpnVxlanRouteTarget           EltexEvpnRouteTarget,
+      eltexEvpnVxlanRouteTargetRowStatus  RowStatus,
+      eltexEvpnVxlanRouteTargetType       EltexEvpnRouteTargetType
+    }
+
+  eltexEvpnVxlanRouteTarget OBJECT-TYPE
+    SYNTAX      EltexEvpnRouteTarget
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "8-byte route target value."
+    ::= { eltexEvpnVxlanRouteTargetEntry 1 }
+
+  eltexEvpnVxlanRouteTargetRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "The row status of VxLAN Instance table entry. Should be
+                 used to create and destroy table entries."
+    ::= { eltexEvpnVxlanRouteTargetEntry 2 }
+
+  eltexEvpnVxlanRouteTargetType OBJECT-TYPE
+    SYNTAX      EltexEvpnRouteTargetType
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "The type of route target which can be either import, export or both."
+    ::= { eltexEvpnVxlanRouteTargetEntry 3 }
+
+-------------------------------------------------------------------------------
+
+--
+-- VxLAN tunnel table.
+--
+-- This table is responsible for information about VxLAN tunnels.
+
+  eltexEvpnVxlanTunnelTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnVxlanTunnelEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Read-only table for displaying VxLAN tunnels in use by
+                 VxLAN instances."
+    ::= { eltexEvpnVxlan 5 }
+
+  eltexEvpnVxlanTunnelEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnVxlanTunnelEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "A VXLAN tunnel used by EVPN instance."
+    INDEX       { eltexEvpnVxlanTunnelLocalVni,
+                  eltexEvpnVxlanTunnelRemoteVni,
+                  eltexEvpnVxlanTunnelDestinationAddressType,
+                  eltexEvpnVxlanTunnelDestinationAddress,
+                  eltexEvpnVxlanTunnelSourceAddressType,
+                  eltexEvpnVxlanTunnelSourceAddress }
+    ::= { eltexEvpnVxlanTunnelTable 1 }
+
+  EltexEvpnVxlanTunnelEntry ::= SEQUENCE {
+      eltexEvpnVxlanTunnelLocalVni                VniOrNone,
+      eltexEvpnVxlanTunnelRemoteVni               VniOrNone,
+      eltexEvpnVxlanTunnelDestinationAddressType  InetAddressType,
+      eltexEvpnVxlanTunnelDestinationAddress      InetAddress,
+      eltexEvpnVxlanTunnelSourceAddressType       InetAddressType,
+      eltexEvpnVxlanTunnelSourceAddress           InetAddress,
+      eltexEvpnVxlanTunnelOperStatus              EltexEvpnOperStatus,
+      eltexEvpnVxlanTunnelVxlanIndex              Unsigned32,
+      eltexEvpnVxlanTunnelLocalVlanId             VlanIdOrNone
+    }
+
+  eltexEvpnVxlanTunnelLocalVni OBJECT-TYPE
+    SYNTAX      VniOrNone
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The local VNI associated with the VxLAN tunnel."
+    ::= { eltexEvpnVxlanTunnelEntry 1 }
+
+  eltexEvpnVxlanTunnelRemoteVni OBJECT-TYPE
+    SYNTAX      VniOrNone
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The remote VNI associated with the VxLAN tunnel."
+    ::= { eltexEvpnVxlanTunnelEntry 2 }
+
+  eltexEvpnVxlanTunnelDestinationAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The destination IP address type of the VxLAN tunnel."
+    ::= { eltexEvpnVxlanTunnelEntry 3 }
+
+  eltexEvpnVxlanTunnelDestinationAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The destination IP address of the VxLAN tunnel."
+    ::= { eltexEvpnVxlanTunnelEntry 4 }
+
+  eltexEvpnVxlanTunnelSourceAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The source IP address type of the VxLAN tunnel."
+    ::= { eltexEvpnVxlanTunnelEntry 5 }
+
+  eltexEvpnVxlanTunnelSourceAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The source IP address of the VxLAN tunnel."
+    ::= { eltexEvpnVxlanTunnelEntry 6 }
+
+  eltexEvpnVxlanTunnelOperStatus OBJECT-TYPE
+    SYNTAX      EltexEvpnOperStatus
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "VxLAN tunnel operational status."
+    ::= { eltexEvpnVxlanTunnelEntry 7 }
+
+  eltexEvpnVxlanTunnelVxlanIndex OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The index of VxLAN instance entry this tunnel is associated with."
+    ::= { eltexEvpnVxlanTunnelEntry 8 }
+
+  eltexEvpnVxlanTunnelLocalVlanId OBJECT-TYPE
+    SYNTAX      VlanIdOrNone
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Local VLAN interface ID that is associated with local VNI."
+    ::= { eltexEvpnVxlanTunnelEntry 9 }
+
+-------------------------------------------------------------------------------
+
+--
+-- EVPN Ethernet Segment table.
+--
+-- Read-write table providing configuration parameters for Ethernet Segments.
+
+  eltexEvpnEsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnEsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Read-write table providing configuration parameters for
+                 Ethernet Segments."
+    ::= { eltexEvpnEs 1 }
+
+  eltexEvpnEsEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnEsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Configuration for an Ethernet Segment."
+    INDEX       { eltexEvpnEsIfIndex }
+    ::= { eltexEvpnEsTable 1 }
+
+  EltexEvpnEsEntry ::= SEQUENCE {
+      eltexEvpnEsIfIndex               InterfaceIndex,
+      eltexEvpnEsRowStatus             RowStatus,
+      eltexEvpnEsType                  EvpnEsType,
+      eltexEvpnEsNumber                EsNumberOrNone,
+      eltexEvpnEsSystemMac             MacAddress
+    }
+
+  eltexEvpnEsIfIndex OBJECT-TYPE
+    SYNTAX      InterfaceIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Interface index of the Ethernet Segment.
+                 Note that this is the interface index bundle
+                 interface for the link to the multi-homed CE."
+    ::= { eltexEvpnEsEntry 1 }
+
+  eltexEvpnEsRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "Row status. Used to create and delete the configuration
+                 for this Ethernet Segment."
+    ::= { eltexEvpnEsEntry 2 }
+
+  eltexEvpnEsType OBJECT-TYPE
+    SYNTAX      EvpnEsType
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Ethernet Segment type from RFC7432."
+    DEFVAL      { esTypeArbitrary }
+    ::= { eltexEvpnEsEntry 3 }
+
+  eltexEvpnEsNumber OBJECT-TYPE
+    SYNTAX      EsNumberOrNone
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Number of the Ethernet Segment."
+    DEFVAL      { 0 }
+    ::= { eltexEvpnEsEntry 4 }
+
+  eltexEvpnEsSystemMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Configured Ethernet Segment System MAC address."
+    DEFVAL      { '000000000000'H }
+    ::= { eltexEvpnEsEntry 5 }
+
+-------------------------------------------------------------------------------
+
+--
+-- EVPN Ethernet Segment status table.
+--
+-- Read-only Ethernet Segment status table.
+
+  eltexEvpnEsStateTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnEsStateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Read-only Ethernet Segment status table. An entry exists
+                 for each interface that has been configured or
+                 auto-discovered as an Ethernet Segment."
+    ::= { eltexEvpnEs 2 }
+
+  eltexEvpnEsStateEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnEsStateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Status of an Ethernet Segment."
+    INDEX { eltexEvpnEsIfIndex }
+      ::= { eltexEvpnEsStateTable 1 }
+
+  EltexEvpnEsStateEntry ::= SEQUENCE {
+      eltexEvpnEsStateStatus                EltexEvpnEsStatusType,
+      eltexEvpnEsStateIfStatus              EltexEvpnEsStatusType,
+      eltexEvpnEsStateType                  EvpnEsType,
+      eltexEvpnEsStateNumber                EsNumberOrNone,
+      eltexEvpnEsStateSystemMac             MacAddress,
+      eltexEvpnEsStateMode                  EltexEvpnEsModeTc,
+      eltexEvpnEsStateRouteDistinguisher    EltexEvpnRouteDistinguisher,
+      eltexEvpnEsStateRouteTarget           EltexEvpnRouteTarget,
+      eltexEvpnEsStateDfElectionWaitTime    Unsigned32,
+      eltexEvpnEsStateTnnlEndptAddrType     InetAddressType,
+      eltexEvpnEsStateTnnlEndptAddr         InetAddress
+    }
+
+  eltexEvpnEsStateStatus OBJECT-TYPE
+    SYNTAX      EltexEvpnEsStatusType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Status of the Ethernet Segment configuration.
+                 A value of 'up' indicates that the Ethernet Segment
+                 configuration is being used in EVPN route advertisements."
+    ::= { eltexEvpnEsStateEntry 2 }
+
+  eltexEvpnEsStateIfStatus OBJECT-TYPE
+    SYNTAX      EltexEvpnEsStatusType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Status of the interface.
+                 A value of 'up' indicates that the interface is active
+                 and capable of forwarding data."
+    ::= { eltexEvpnEsStateEntry 3 }
+
+  eltexEvpnEsStateType OBJECT-TYPE
+    SYNTAX      EvpnEsType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Ethernet Segment type from RFC7432."
+    ::= { eltexEvpnEsStateEntry 4 }
+
+  eltexEvpnEsStateNumber OBJECT-TYPE
+    SYNTAX      EsNumberOrNone
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of the Ethernet Segment."
+    ::= { eltexEvpnEsStateEntry 5 }
+
+  eltexEvpnEsStateSystemMac OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Configured Ethernet Segment System MAC address."
+    ::= { eltexEvpnEsStateEntry 6 }
+
+  eltexEvpnEsStateMode OBJECT-TYPE
+    SYNTAX      EltexEvpnEsModeTc
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Indicates which multi-homing procedures, if any, are in
+                 operation on the Ethernet Segment."
+    ::= { eltexEvpnEsStateEntry 7 }
+
+  eltexEvpnEsStateRouteDistinguisher OBJECT-TYPE
+    SYNTAX      EltexEvpnRouteDistinguisher
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The route distinguisher in use for advertising
+                 the Ethernet Segment route.
+                 If no value is configured for evpnEsRouteDistinguisher, the
+                 value is auto-generated based on the BGP router ID."
+    ::= { eltexEvpnEsStateEntry 8 }
+
+  eltexEvpnEsStateRouteTarget OBJECT-TYPE
+    SYNTAX      EltexEvpnRouteTarget
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The ES-Import Route Target for the Ethernet Segment."
+    ::= { eltexEvpnEsStateEntry 9 }
+
+  eltexEvpnEsStateDfElectionWaitTime OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Time to wait after advertising the Ethernet Segment
+                 before running the designated forwarder election."
+    ::= { eltexEvpnEsStateEntry 10 }
+
+  eltexEvpnEsStateTnnlEndptAddrType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Type of tunnel endpoint address to advertise in EVPN
+                 routes for this ES, or 'unknown' if there is no associated
+                 IP address."
+    ::= { eltexEvpnEsStateEntry 11 }
+
+  eltexEvpnEsStateTnnlEndptAddr OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Tunnel endpoint address to use in EVPN routes for this ES.
+                 This will be the value of evpnEsTnnlEndptAddr if configured
+                 otherwise the local router address configured for the
+                 entity."
+    ::= { eltexEvpnEsStateEntry 12 }
+
+-------------------------------------------------------------------------------
+
+--
+-- EVPN Ethernet Members table.
+--
+-- Read-only table listing the IP address of each PE connected to
+-- an Ethernet Segment.
+
+  eltexEvpnEsMemberTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnEsMemberEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Read-only table listing the IP address of each PE
+                 connected to Ethernet Segment."
+    ::= { eltexEvpnEs 3 }
+
+  eltexEvpnEsMemberEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnEsMemberEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "A member of an Ethernet Segment."
+    INDEX { eltexEvpnEsIfIndex,
+            eltexEvpnEsMemberAddrType,
+            eltexEvpnEsMemberAddr }
+      ::= { eltexEvpnEsMemberTable 1 }
+
+  EltexEvpnEsMemberEntry ::= SEQUENCE {
+      eltexEvpnEsMemberAddrType     InetAddressType,
+      eltexEvpnEsMemberAddr         InetAddress,
+      eltexEvpnEsMemberIsLocal      TruthValue
+    }
+
+  eltexEvpnEsMemberAddrType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "IP address type of a PE connected to an Ethernet Segment."
+    ::= { eltexEvpnEsMemberEntry 2 }
+
+  eltexEvpnEsMemberAddr OBJECT-TYPE
+    SYNTAX      InetAddress (SIZE(4|16))
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "IP address of a PE connected to an Ethernet Segment."
+    ::= { eltexEvpnEsMemberEntry 3 }
+
+  eltexEvpnEsMemberIsLocal OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Indicates whether the IP address belongs to the local
+                 router."
+    ::= { eltexEvpnEsMemberEntry 4 }
+
+-------------------------------------------------------------------------------
+
+--
+-- EVPN Ethernet Segment designated forwarder table.
+--
+-- Read-only table identifying the designated forwarder for each supported
+-- VLAN on an Ethernet Segment.
+
+  eltexEvpnEsDfTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnEsDfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Read-only table identifying the designated forwarder for
+                 each supported VLAN on an Ethernet Segment."
+    ::= { eltexEvpnEs 4 }
+
+  eltexEvpnEsDfEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnEsDfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The designated forwarder for a VLAN on an Ethernet Segment."
+    INDEX { eltexEvpnEsIfIndex,
+            eltexEvpnEsDfVlan }
+      ::= { eltexEvpnEsDfTable 1 }
+
+  EltexEvpnEsDfEntry ::= SEQUENCE {
+      eltexEvpnEsDfVlan         VlanIdOrNone,
+      eltexEvpnEsDfAddrType     InetAddressType,
+      eltexEvpnEsDfAddr         InetAddress
+    }
+
+  eltexEvpnEsDfVlan OBJECT-TYPE
+    SYNTAX      VlanIdOrNone
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "VLAN identifier of a service on the Ethernet Segment, or 0 for
+                 untagged traffic."
+    ::= { eltexEvpnEsDfEntry 2 }
+
+  eltexEvpnEsDfAddrType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "IP address type of the designated forwarder."
+    ::= { eltexEvpnEsDfEntry 3 }
+
+  eltexEvpnEsDfAddr OBJECT-TYPE
+    SYNTAX      InetAddress (SIZE(4|16))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The IP address of the designated forwarder for the VLAN
+                 on this Ethernet Segment."
+    ::= { eltexEvpnEsDfEntry 4 }
+
+-------------------------------------------------------------------------------
+
+--
+-- EVPN IP-VRF table.
+--
+-- Read-write table for configuring IP-VRFs for EVPN.
+
+  eltexEvpnIpVrfTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF EltexEvpnIpVrfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Read-write table for configuring IP-VRFs for EVPN."
+    ::= { eltexEvpnIpVrf 1 }
+
+  eltexEvpnIpVrfEntry OBJECT-TYPE
+    SYNTAX      EltexEvpnIpVrfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Configuration for an IP-VRF."
+    INDEX       { eltexEvpnIpVrfMrid }
+      ::= { eltexEvpnIpVrfTable 1 }
+
+  EltexEvpnIpVrfEntry ::= SEQUENCE {
+      eltexEvpnIpVrfMrid                INTEGER,
+      eltexEvpnIpVrfRowStatus           RowStatus,
+      eltexEvpnIpVrfVni                 VniOrNone,
+      eltexEvpnIpVrfOperStatus          EltexEvpnOperStatus,
+      eltexEvpnIpVrfOperReason          EltexEvpnOperReason,
+      eltexEvpnIpVrfOperRd              EltexEvpnRouteDistinguisher,
+      eltexEvpnIpVrfName                OCTET STRING
+    }
+
+  eltexEvpnIpVrfMrid OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The MRID for which this entry contains information."
+    ::= { eltexEvpnIpVrfEntry 1 }
+
+  eltexEvpnIpVrfRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "Row status. Used to create and delete the configuration
+                 for this IP-VRF."
+    ::= { eltexEvpnIpVrfEntry 2 }
+
+  eltexEvpnIpVrfVni OBJECT-TYPE
+    SYNTAX      VniOrNone
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION "The VXLAN Network Identifier for the IP-VRF.  This is
+                 required if the encapsulation is 'vxlan' and ignored
+                 otherwise."
+    DEFVAL      { 0 }
+    ::= { eltexEvpnIpVrfEntry 3 }
+
+  eltexEvpnIpVrfOperStatus OBJECT-TYPE
+    SYNTAX      EltexEvpnOperStatus
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Operational status of the IP-VRF configuration."
+    ::= { eltexEvpnIpVrfEntry 4 }
+
+  eltexEvpnIpVrfOperReason OBJECT-TYPE
+    SYNTAX      EltexEvpnOperReason
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The reason for the IP-VRF configuration to be in its
+                 current oper status."
+    ::= { eltexEvpnIpVrfEntry 5 }
+
+  eltexEvpnIpVrfOperRd OBJECT-TYPE
+    SYNTAX      EltexEvpnRouteDistinguisher
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The route distinguisher in use for this IP-VRF.
+
+                 This is set as follows.
+
+                 -  The value of evpnIpVrfRouteDistinguisher if configured
+                    and not set to all zeros.
+
+                 -  Automatically derived if evpnIpVrfRouteDistinguisher is
+                    set to all zeros and the IP-VRF has the information
+                    required to derive the value.
+
+                    The auto-derived RD is {0x0001, <local IP addr>, VNI}.
+
+                    The <local IP addr> is the configured local router IPv4
+                    address, if any, otherwise it is the BGP router ID.
+
+                 -  Set to all zeros otherwise."
+    ::= { eltexEvpnIpVrfEntry 6 }
+
+  eltexEvpnIpVrfName OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE (1..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The text name of the IP-VRF."
+    ::= { eltexEvpnIpVrfEntry 7 }
+
+-------------------------------------------------------------------------------
+
+--
+-- eltexEvpnRouteMacIpTable
+--
+-- Read-only table for displaying MAC addresses belonging to EVPN instances.
+-- This includes MAC addresses learned from locally attached customer
+-- sites and MAC addresses received from remote EVPN instances.
+--
+
+  eltexEvpnRouteMacIpTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF EltexEvpnRouteMacIpEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "Read-only table for displaying MAC addresses belonging to
+                 EVPN instances. This includes MAC addresses learned from
+                 locally attached customer sites and MAC addresses received
+                 from remote EVPN instances."
+    ::= { eltexEvpnRoute 1 }
+
+  eltexEvpnRouteMacIpEntry OBJECT-TYPE
+    SYNTAX        EltexEvpnRouteMacIpEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "A MAC address associated with an EVPN instance."
+    INDEX { eltexEvpnRouteVpnId,
+            eltexEvpnRouteMacIpEthernetTagId,
+            eltexEvpnRouteMacIpMacAddress,
+            eltexEvpnRouteMacIpInetAddressType,
+            eltexEvpnRouteMacIpInetAddress,
+            eltexEvpnRouteMacIpPathIndex
+            }
+      ::= { eltexEvpnRouteMacIpTable 1 }
+
+  EltexEvpnRouteMacIpEntry ::= SEQUENCE {
+      eltexEvpnRouteVpnId                      Unsigned32,
+      eltexEvpnRouteMacIpEthernetTagId         Unsigned32,
+      eltexEvpnRouteMacIpMacAddress            MacAddress,
+      eltexEvpnRouteMacIpInetAddressType       InetAddressType,
+      eltexEvpnRouteMacIpInetAddress           InetAddress,
+      eltexEvpnRouteMacIpPathIndex             NumericIndex,
+      eltexEvpnRouteMacIpSource                EltexEvpnSource,
+      eltexEvpnRouteMacIpBgpNhAddrType         InetAddressType,
+      eltexEvpnRouteMacIpBgpNhAddr             InetAddress,
+      eltexEvpnRouteMacIpLocalInterface        InterfaceIndexOrZero,
+      eltexEvpnRouteMacIpLabel                 Unsigned32,
+      eltexEvpnRouteMacIpInUse                 TruthValue,
+      eltexEvpnRouteMacIpEsi                   EltexEvpnESI,
+      eltexEvpnRouteMacIpSequenceNum           Unsigned32,
+      eltexEvpnRouteMacIpSticky                TruthValue,
+      eltexEvpnRouteMacIpDampened              TruthValue
+    }
+
+  eltexEvpnRouteVpnId OBJECT-TYPE
+    SYNTAX        Unsigned32
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "VPN ID which is equal to VxLAN index value."
+   ::= { eltexEvpnRouteMacIpEntry 1 }
+
+  eltexEvpnRouteMacIpEthernetTagId OBJECT-TYPE
+    SYNTAX        Unsigned32
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "The Ethernet tag ID associated with the MAC address."
+   ::= { eltexEvpnRouteMacIpEntry 2 }
+
+  eltexEvpnRouteMacIpMacAddress OBJECT-TYPE
+    SYNTAX        MacAddress
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "The MAC address in the EVPN FDB."
+   ::= { eltexEvpnRouteMacIpEntry 3 }
+
+  eltexEvpnRouteMacIpInetAddressType OBJECT-TYPE
+    SYNTAX        InetAddressType
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "Type of IP address associated with the MAC address, or
+                 'unknown' if there is no associated IP address."
+   ::= { eltexEvpnRouteMacIpEntry 4 }
+
+  eltexEvpnRouteMacIpInetAddress OBJECT-TYPE
+    SYNTAX        InetAddress (SIZE(0|4|16))
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "IP address associated with the MAC address, if any."
+   ::= { eltexEvpnRouteMacIpEntry 5 }
+
+  eltexEvpnRouteMacIpPathIndex OBJECT-TYPE
+    SYNTAX        NumericIndex
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "Arbitrary index, used to distinguish multiple paths
+                 associated with a single MAC/IP entry."
+   ::= { eltexEvpnRouteMacIpEntry 6 }
+
+  eltexEvpnRouteMacIpSource OBJECT-TYPE
+    SYNTAX        EltexEvpnSource
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Source from which the MAC address was learned."
+   ::= { eltexEvpnRouteMacIpEntry 7 }
+
+  eltexEvpnRouteMacIpBgpNhAddrType OBJECT-TYPE
+    SYNTAX        InetAddressType
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Type of IP address associated with the BGP next hop for
+                 the MAC address.
+
+                 Set to 'unknown' for MAC addresses learned from local
+                 customer sites."
+   ::= { eltexEvpnRouteMacIpEntry 8 }
+
+  eltexEvpnRouteMacIpBgpNhAddr OBJECT-TYPE
+    SYNTAX        InetAddress (SIZE(0|4|16))
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "The BGP next hop for the MAC address.
+
+                 This returns a zero length string for MAC addresses
+                 learned from local customer sites."
+   ::= { eltexEvpnRouteMacIpEntry 9 }
+
+  eltexEvpnRouteMacIpLocalInterface OBJECT-TYPE
+    SYNTAX        InterfaceIndexOrZero
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "The local interface index through which the MAC address
+                 can be reached, or zero for a MAC addresses
+                 learned through BGP."
+   ::= { eltexEvpnRouteMacIpEntry 10 }
+
+  eltexEvpnRouteMacIpLabel OBJECT-TYPE
+    SYNTAX        Unsigned32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "The label or VNI associated with this MAC address."
+   ::= { eltexEvpnRouteMacIpEntry 11 }
+
+  eltexEvpnRouteMacIpInUse OBJECT-TYPE
+    SYNTAX        TruthValue
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Indicates whether the MAC/IP entry is in use for forwarding.
+
+                 For MAC/IP advertisements from remote EVPN instances,
+                 this indicates whether the entry has been accepted
+                 and programmed.
+
+                 Always set to 'true' for MAC addresses learned from
+                 local customer sites."
+   ::= { eltexEvpnRouteMacIpEntry 12 }
+
+  eltexEvpnRouteMacIpEsi OBJECT-TYPE
+    SYNTAX        EltexEvpnESI
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "The Ethernet Segment Identifier advertised with the
+                 MAC/IP address."
+   ::= { eltexEvpnRouteMacIpEntry 13 }
+
+  eltexEvpnRouteMacIpSequenceNum OBJECT-TYPE
+    SYNTAX        Unsigned32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "The MAC Mobility sequence number associated with the
+                 MAC/IP address."
+   ::= { eltexEvpnRouteMacIpEntry 14 }
+
+  eltexEvpnRouteMacIpSticky OBJECT-TYPE
+    SYNTAX        TruthValue
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Whether the Sticky flag is set for this MAC/IP address."
+   ::= { eltexEvpnRouteMacIpEntry 15 }
+
+  eltexEvpnRouteMacIpDampened OBJECT-TYPE
+    SYNTAX        TruthValue
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Whether the MAC/IP address is being dampened (routes for this
+                 MAC/IP are ignored due to a duplication)."
+   ::= { eltexEvpnRouteMacIpEntry 16 }
+
+-------------------------------------------------------------------------------
+
+--
+-- eltexEvpnRouteIncMcastTable
+--
+-- Read-only table for displaying inclusive multicast routes associated with
+-- EVPN instances.  This includes routes sent by the local router and routes
+-- received from remote EVPN instances.
+--
+
+  eltexEvpnRouteIncMcastTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF EltexEvpnRouteIncMcastEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "Read-only table for displaying inclusive multicast routes
+                 associated with EVPN instances.  This includes routes sent
+                 by the local router and routes received from remote EVPN
+                 instances."
+    ::= { eltexEvpnRoute 2 }
+
+  eltexEvpnRouteIncMcastEntry OBJECT-TYPE
+    SYNTAX        EltexEvpnRouteIncMcastEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "An inclusive multicast route associated with an EVPN
+                 instance."
+    INDEX { eltexEvpnRouteVpnId,
+            eltexEvpnRouteIncMcastRd,
+            eltexEvpnRouteIncMcastEthernetTagId,
+            eltexEvpnRouteIncMcastIpAddressType,
+            eltexEvpnRouteIncMcastIpAddress }
+      ::= { eltexEvpnRouteIncMcastTable 1 }
+
+  EltexEvpnRouteIncMcastEntry ::= SEQUENCE {
+      eltexEvpnRouteIncMcastRd                    EltexEvpnRouteDistinguisher,
+      eltexEvpnRouteIncMcastEthernetTagId         Unsigned32,
+      eltexEvpnRouteIncMcastIpAddressType         InetAddressType,
+      eltexEvpnRouteIncMcastIpAddress             InetAddress,
+      eltexEvpnRouteIncMcastSource                EltexEvpnSource,
+      eltexEvpnRouteIncMcastTnnlType              EltexEvpnPmsiTnnlType,
+      eltexEvpnRouteIncMcastTnnlLabel             Unsigned32,
+      eltexEvpnRouteIncMcastTnnlIpAddrType        InetAddressType,
+      eltexEvpnRouteIncMcastTnnlIpAddr            InetAddress
+    }
+
+  eltexEvpnRouteIncMcastRd OBJECT-TYPE
+    SYNTAX        EltexEvpnRouteDistinguisher
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "The Route Distinguisher from the route."
+   ::= { eltexEvpnRouteIncMcastEntry 1 }
+
+  eltexEvpnRouteIncMcastEthernetTagId OBJECT-TYPE
+    SYNTAX        Unsigned32
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "The Ethernet tag ID associated with the route."
+   ::= { eltexEvpnRouteIncMcastEntry 2 }
+
+  eltexEvpnRouteIncMcastIpAddressType OBJECT-TYPE
+    SYNTAX        InetAddressType
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "The originating router's IP address type."
+   ::= { eltexEvpnRouteIncMcastEntry 3 }
+
+  eltexEvpnRouteIncMcastIpAddress OBJECT-TYPE
+    SYNTAX        InetAddress (SIZE(4|16))
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION "The originating router's IP address."
+   ::= { eltexEvpnRouteIncMcastEntry 4 }
+
+  eltexEvpnRouteIncMcastSource OBJECT-TYPE
+    SYNTAX        EltexEvpnSource
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Source from which the route was learned."
+   ::= { eltexEvpnRouteIncMcastEntry 5 }
+
+  eltexEvpnRouteIncMcastTnnlType OBJECT-TYPE
+    SYNTAX        EltexEvpnPmsiTnnlType
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Tunnel type as contained in the PMSI attribute associated
+                 with the route."
+   ::= { eltexEvpnRouteIncMcastEntry 6 }
+
+  eltexEvpnRouteIncMcastTnnlLabel OBJECT-TYPE
+    SYNTAX        Unsigned32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "The label or VNI associated with this tunnel."
+   ::= { eltexEvpnRouteIncMcastEntry 7 }
+
+  eltexEvpnRouteIncMcastTnnlIpAddrType OBJECT-TYPE
+    SYNTAX        InetAddressType
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Tunnel endpoint IP address type."
+   ::= { eltexEvpnRouteIncMcastEntry 8 }
+
+  eltexEvpnRouteIncMcastTnnlIpAddr OBJECT-TYPE
+    SYNTAX        InetAddress (SIZE(0|4|16))
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION "Tunnel endpoint IP address, taken from the PMSI attribute
+                 associated with the route.
+
+                 -  For a tunnel type of ingressReplication, this is the
+                    IP address to which data is replicated.
+                 -  For a tunnel type of pimAsm, pimBidir or pimSsm, this
+                    is the multicast group IP address.
+                 -  For other unsupported types this is empty."
+   ::= { eltexEvpnRouteIncMcastEntry 9 }
+
+-------------------------------------------------------------------------------
+
+END

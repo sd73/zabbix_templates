@@ -1,0 +1,454 @@
+ELTEX-MES-BRIDGE-EXT-MIB DEFINITIONS ::= BEGIN
+
+-- Title:      ELTEX MES Bridge Extension Private
+-- Version:    1.1
+-- Date:       03 Aug 2020
+-- 21-Sep-2012 - Added eltBridgeExtMacLearningVlanTable
+-- 03-Aug-2016 - Added eltBridgeStpConfigPortTable
+
+IMPORTS
+    eltMesBridgeExtMIB                                      FROM ELTEX-MES-MNG-MIB
+    rlBrgPvstVlanEntry                                      FROM RADLAN-BRIDGEMIBOBJECTS-MIB
+    rlBrgPvstOperVlanEntry                                  FROM RADLAN-BRIDGEMIBOBJECTS-MIB
+    VlanIndex                                               FROM Q-BRIDGE-MIB
+    dot1dBasePort                                           FROM BRIDGE-MIB
+    rlBrgPvstPortVlanId                                     FROM RADLAN-BRIDGEMIBOBJECTS-MIB
+    rlBrgPvstPortPort                                       FROM RADLAN-BRIDGEMIBOBJECTS-MIB
+    MODULE-IDENTITY, OBJECT-TYPE                            FROM SNMPv2-SMI
+    TruthValue                                              FROM SNMPv2-TC
+    rldot1sMstpInstanceEntry, rldot1sMstpInstancePortEntry  FROM RADLAN-BRIDGEMIBOBJECTS-MIB
+    Counter                                                 FROM RFC1155-SMI;
+
+
+eltMesBridgeExtMIBObjects  OBJECT IDENTIFIER
+    ::= { eltMesBridgeExtMIB 0 }
+
+
+eltMesBridgeExtMacLearning  OBJECT IDENTIFIER
+    ::= { eltMesBridgeExtMIBObjects 0 }
+    
+eltMesBridgeMstp  OBJECT IDENTIFIER
+    ::= { eltMesBridgeExtMIBObjects 3 }
+
+eltMesBridgeStp OBJECT IDENTIFIER
+    ::= { eltMesBridgeExtMIBObjects 5 }
+
+eltMesBridgePvst OBJECT IDENTIFIER
+    ::= { eltMesBridgeExtMIBObjects 6 }
+
+EltBridgeStpGroupMacAddressType ::= TEXTUAL-CONVENTION
+    STATUS          current
+    DESCRIPTION         "Type of STP BPDU destination MAC address"
+    SYNTAX          INTEGER  {
+                                dot1d   (1),  -- Bridge Group Address (01-80-C2-00-00-00)
+                                dot1ad  (2)   -- Provider Bridge Group Address (01-80-C2-00-00-08)
+                             }
+
+--
+-- eltBridgeExtMacLearningVlanTable
+--
+
+eltBridgeExtMacLearningVlanTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF EltBridgeExtMacLearningVlanEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION        "Per VLAN MAC learning table."
+    ::= { eltMesBridgeExtMacLearning 1 }
+
+eltBridgeExtMacLearningVlanEntry OBJECT-TYPE
+    SYNTAX          EltBridgeExtMacLearningVlanEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION        "VLAN MAC learning entry."
+    INDEX           { eltBridgeExtMacLearningVlanIndex }
+    ::= { eltBridgeExtMacLearningVlanTable 1 }
+
+EltBridgeExtMacLearningVlanEntry ::= SEQUENCE {
+        eltBridgeExtMacLearningVlanIndex   VlanIndex,
+        eltBridgeExtMacLearningVlanEnabled TruthValue
+}
+
+eltBridgeExtMacLearningVlanIndex OBJECT-TYPE
+	SYNTAX          VlanIndex
+	MAX-ACCESS      not-accessible
+	STATUS          current
+	DESCRIPTION        "Indicates the VLAN number."
+    ::= { eltBridgeExtMacLearningVlanEntry 1 }
+
+eltBridgeExtMacLearningVlanEnabled OBJECT-TYPE
+    SYNTAX          TruthValue
+    MAX-ACCESS      read-create
+    STATUS          current
+    DESCRIPTION        "Indicates whether the MAC addresses learning is enabled
+						in this VLAN or not."
+    DEFVAL          { true }
+    ::= { eltBridgeExtMacLearningVlanEntry 2 }
+
+--
+-- eltBridgeStpConfigTable
+--
+
+eltBridgeStpConfigPortTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF EltBridgeStpConfigPortEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION        "Port configuration table for Spanning Tree Protocol."
+    ::= { eltMesBridgeStp 1 }
+
+eltBridgeStpConfigPortEntry OBJECT-TYPE
+    SYNTAX          EltBridgeStpConfigPortEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION        "Port configuration entry for Spanning Tree Protocol."
+    INDEX           { dot1dBasePort }
+    ::= { eltBridgeStpConfigPortTable 1 }
+
+EltBridgeStpConfigPortEntry ::= SEQUENCE {
+        eltBridgeStpConfigPortGroupMacAddress 	EltBridgeStpGroupMacAddressType
+}
+
+eltBridgeStpConfigPortGroupMacAddress OBJECT-TYPE
+    SYNTAX          EltBridgeStpGroupMacAddressType
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "Sets destination MAC address for Bridge PDUs. A port sends
+                        and receives BPDUs only with specified group MAC address."
+    DEFVAL          { dot1d }
+    ::= { eltBridgeStpConfigPortEntry 1 }
+
+eltdot1dStpLastTopologyChangePort OBJECT-TYPE
+    SYNTAX  INTEGER
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+            "This value contain port ifIndex from
+            which the request about the last change of topology came.
+            If value is 0 - topology wasn't changed yet."
+    ::= { eltMesBridgeStp 2 }
+
+eltBridgeStpTcProtectionObjects OBJECT IDENTIFIER
+    ::= { eltMesBridgeStp 4 }
+
+eltBridgeStpTcProtectionEnable OBJECT-TYPE
+    SYNTAX          TruthValue
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "Indicates the status of TC Protection feature."
+    DEFVAL          { false }
+    ::= { eltBridgeStpTcProtectionObjects 1 }
+
+eltBridgeStpTcProtectionInterval OBJECT-TYPE
+    SYNTAX          INTEGER (1..10)
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "The time taken by the switch to process the maximum of TC BPDUs."
+    DEFVAL          { 2 }
+    ::= { eltBridgeStpTcProtectionObjects 2 }
+
+eltBridgeStpTcProtectionThresholdValue OBJECT-TYPE
+    SYNTAX          INTEGER (1..255)
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "The maximum number of MAC table flushes that the device 
+             can perform within set interval."
+    DEFVAL          { 1 }
+    ::= { eltBridgeStpTcProtectionObjects 3 }
+
+eltBridgeStpBridgeCounters OBJECT IDENTIFIER
+    ::= { eltMesBridgeStp 5 }
+
+eltBridgeStpNumOfTcBpduHandled OBJECT-TYPE
+    SYNTAX          Counter
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+            "The number of topology change BPDU handled by the current bridge."
+    ::= { eltBridgeStpBridgeCounters 1 }
+
+--
+--   The Multiple Spanning Tree Instance Table
+--
+
+eltdot1sMstpInstanceTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF Eltdot1sMstpInstanceEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+            "A table that contains STP/RSTP/MSTP. Configurations for STP
+             and RSTP are stored in the zero instance."
+    ::= { eltMesBridgeMstp 4 }
+
+eltdot1sMstpInstanceEntry OBJECT-TYPE
+    SYNTAX  Eltdot1sMstpInstanceEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "A list of information maintained by every instance
+         about the multiple Spanning Tree Protocol state for
+         that instance."
+    AUGMENTS { rldot1sMstpInstanceEntry }
+    ::= { eltdot1sMstpInstanceTable 1 }
+
+Eltdot1sMstpInstanceEntry ::= SEQUENCE {
+    eltdot1sMstpInstanceLastTopologyChangePort     INTEGER,
+    eltdot1sMstpInstanceTcProtectionEnable         TruthValue,
+    eltdot1sMstpInstanceTcProtectionInterval       INTEGER,
+    eltdot1sMstpInstanceTcProtectionThresholdValue INTEGER,
+    eltdot1sMstpInstanceNumOfTcBpduHandled         Counter
+}
+
+eltdot1sMstpInstanceLastTopologyChangePort OBJECT-TYPE
+    SYNTAX  INTEGER
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+            "This value contain port ifIndex from
+            which the request about the last change of topology came.
+            If value is 0 - topology wasn't changed yet."
+    ::= { eltdot1sMstpInstanceEntry 1}
+
+eltdot1sMstpInstanceTcProtectionEnable OBJECT-TYPE
+    SYNTAX          TruthValue
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "Indicates the status of TC Protection feature."
+    DEFVAL          { false }
+    ::= { eltdot1sMstpInstanceEntry 2 }
+
+eltdot1sMstpInstanceTcProtectionInterval OBJECT-TYPE
+    SYNTAX          INTEGER (1..10)
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "The time taken by the switch to process the maximum of TC BPDUs."
+    DEFVAL          { 2 }
+    ::= { eltdot1sMstpInstanceEntry 3 }
+
+eltdot1sMstpInstanceTcProtectionThresholdValue OBJECT-TYPE
+    SYNTAX          INTEGER (1..255)
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "The maximum number of MAC entry flushes that the device can perform within set interval."
+    DEFVAL          { 1 }
+    ::= { eltdot1sMstpInstanceEntry 4 }
+
+eltdot1sMstpInstanceNumOfTcBpduHandled OBJECT-TYPE
+    SYNTAX          Counter
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+            "The number of topology change BPDU handled by the current instance."
+    ::= { eltdot1sMstpInstanceEntry 5 }
+
+--
+-- eltdot1sMstpInstancePortTable
+--
+
+eltdot1sMstpInstancePortTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF Eltdot1sMstpInstancePortEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "A table that contains pair <msti, port> specific information
+         for the Spanning Tree Protocol."
+    ::= { eltMesBridgeMstp 5 }
+
+eltdot1sMstpInstancePortEntry OBJECT-TYPE
+    SYNTAX  Eltdot1sMstpInstancePortEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "A list of information maintained by every pair <msti, port>
+         about the Spanning Tree Protocol state for that pair."
+    AUGMENTS { rldot1sMstpInstancePortEntry }
+    ::= { eltdot1sMstpInstancePortTable 1 }
+
+Eltdot1sMstpInstancePortEntry ::= SEQUENCE {
+    eltdot1sMstpInstancePortRestrictedRole  TruthValue
+}
+
+eltdot1sMstpInstancePortRestrictedRole OBJECT-TYPE
+    SYNTAX  TruthValue
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "If TRUE causes the Port not to be selected as Root Port for the 
+         MSTI, even if it has the best spanning tree priority vector.
+         Such a Port will be selected as an Alternate Port after the Root Port
+         has been selected."
+    REFERENCE
+        "IEEE 802.1ad-D3-1: Section 13.24.29"
+    DEFVAL { false }
+    ::= { eltdot1sMstpInstancePortEntry 1 }
+
+--
+--   The Per-VLAN Spanning Tree Port Configuration Table
+--
+
+eltBridgePvstPortConfigTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF EltBridgePvstPortConfigEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+            "A table that contains port specific
+            configuration for each PVST instance."
+    ::= { eltMesBridgePvst 2 }
+
+eltBridgePvstPortConfigEntry OBJECT-TYPE
+    SYNTAX          EltBridgePvstPortConfigEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION
+            "An entry that contains port specific
+            configuration of the certain PVST instance."
+    INDEX           { rlBrgPvstPortVlanId, rlBrgPvstPortPort }
+    ::= { eltBridgePvstPortConfigTable 1 }
+
+EltBridgePvstPortConfigEntry ::= SEQUENCE {
+    eltBridgePvstPortConfigRestrictedTcn
+        TruthValue
+}
+eltBridgePvstPortConfigRestrictedTcn OBJECT-TYPE
+    SYNTAX          TruthValue
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "Configure filtering of Spanning Tree BPDUs with TC flag set."
+    DEFVAL          { false }
+    ::= { eltBridgePvstPortConfigEntry 9 } 
+
+--
+--   The Per-VLAN Spanning Tree Configuration Table
+--
+
+eltBridgePvstVlanConfigTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF EltBridgePvstVlanConfigEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION         "PVST state extention"
+    ::= { eltMesBridgePvst 6 }
+
+eltBridgePvstVlanConfigEntry OBJECT-TYPE
+    SYNTAX          EltBridgePvstVlanConfigEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION         "Enable or disable spanning tree per vlan"
+    AUGMENTS        { rlBrgPvstVlanEntry }
+    ::= { eltBridgePvstVlanConfigTable 1 }
+
+EltBridgePvstVlanConfigEntry ::= SEQUENCE {
+        eltBridgePvstVlanConfigEnabled                      TruthValue,
+        eltBridgePvstVlanConfigTcProtectionEnable           TruthValue,
+        eltBridgePvstVlanConfigTcProtectionInterval         INTEGER,
+        eltBridgePvstVlanConfigTcProtectionThresholdValue   INTEGER
+}
+
+eltBridgePvstVlanConfigEnabled OBJECT-TYPE
+    SYNTAX          TruthValue
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION         "Defines state of spanning tree per vlan"
+    DEFVAL          { true }
+    ::= { eltBridgePvstVlanConfigEntry 1 }
+    
+eltBridgePvstVlanConfigTcProtectionEnable OBJECT-TYPE
+    SYNTAX          TruthValue
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "Indicates the status of TC Protection feature."
+    DEFVAL          { false }
+    ::= { eltBridgePvstVlanConfigEntry 2 }
+    
+eltBridgePvstVlanConfigTcProtectionInterval OBJECT-TYPE
+    SYNTAX          INTEGER (1..10)
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "The time taken by the switch to process the maximum of TC BPDUs."
+    DEFVAL          { 2 }
+    ::= { eltBridgePvstVlanConfigEntry 3 }
+
+eltBridgePvstVlanConfigTcProtectionThresholdValue OBJECT-TYPE
+    SYNTAX          INTEGER (1..255)
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+            "The maximum number of MAC entry flushes that the device can perform within set interval."
+    DEFVAL          { 1 }
+    ::= { eltBridgePvstVlanConfigEntry 4 }
+
+--
+--   The Per-VLAN Spanning Tree Operation Vlan Table
+--
+
+eltBridgePvstOperVlanTable OBJECT-TYPE
+    SYNTAX          SEQUENCE OF EltBridgePvstOperVlanEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION         "This table contains Per Vlan Spanning-Tree active vlan configuration."
+    ::= { eltMesBridgePvst 7 }
+
+eltBridgePvstOperVlanEntry OBJECT-TYPE
+    SYNTAX          EltBridgePvstOperVlanEntry
+    MAX-ACCESS      not-accessible
+    STATUS          current
+    DESCRIPTION         "The entry contains PVST active configuration per specific Vlan."
+    AUGMENTS        { rlBrgPvstOperVlanEntry }
+    ::= { eltBridgePvstOperVlanTable 1 }
+
+EltBridgePvstOperVlanEntry ::= SEQUENCE {
+        eltBridgePvstOperVlanTcProtectionEnable           TruthValue,
+        eltBridgePvstOperVlanTcProtectionInterval         INTEGER,
+        eltBridgePvstOperVlanTcProtectionThresholdValue   INTEGER,
+        eltBridgePvstOperVlanTcProtectionNumOfBpduHandled Counter,
+        eltBridgePvstOperVlanLastTopologyChangePort       INTEGER
+}
+    
+eltBridgePvstOperVlanTcProtectionEnable OBJECT-TYPE
+    SYNTAX          TruthValue
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+            "Indicates the status of TC Protection feature."
+    ::= { eltBridgePvstOperVlanEntry 1 }
+    
+eltBridgePvstOperVlanTcProtectionInterval OBJECT-TYPE
+    SYNTAX          INTEGER (1..10)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+            "The time taken by the switch to process the maximum of TC BPDUs."
+    ::= { eltBridgePvstOperVlanEntry 2 }
+
+eltBridgePvstOperVlanTcProtectionThresholdValue OBJECT-TYPE
+    SYNTAX          INTEGER (1..255)
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+            "The maximum number of MAC entry flushes that the device can perform within set interval."
+    ::= { eltBridgePvstOperVlanEntry 3 }
+    
+eltBridgePvstOperVlanTcProtectionNumOfBpduHandled OBJECT-TYPE
+    SYNTAX          Counter
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+            "The maximum number of MAC entry flushes that the device can perform within set interval."
+    ::= { eltBridgePvstOperVlanEntry 4 }
+    
+eltBridgePvstOperVlanLastTopologyChangePort OBJECT-TYPE
+    SYNTAX          INTEGER
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+            "This value contain port ifIndex from which the request about 
+             the last change of topology came."
+    ::= { eltBridgePvstOperVlanEntry 5 }
+
+END

@@ -1,0 +1,50 @@
+ELTEX-ARP-INTERFACE-TABLE-MIB DEFINITIONS ::= BEGIN
+
+-- Title:      Eltex IP Router Private Extension
+-- Version:    1.0
+-- Date:       05 Feb 2021
+
+IMPORTS
+    ipNetToMediaEntry                           FROM IP-MIB
+    OBJECT-TYPE                                 FROM SNMPv2-SMI
+    eltMesArpSpec                               FROM ELTEX-MES-IP;
+
+
+eltIpNetToMediaTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF EltIpNetToMediaEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+         ""
+    ::= { eltMesArpSpec 2 }
+
+eltIpNetToMediaEntry OBJECT-TYPE
+    SYNTAX  EltIpNetToMediaEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "This table augments existing table ipNetToMediaTable"
+    AUGMENTS   { ipNetToMediaEntry }
+              ::= { eltIpNetToMediaTable 1 }
+
+EltIpNetToMediaEntry ::= SEQUENCE {
+    eltIpNetToMediaUnnumberedChildIfIndex    INTEGER
+}
+
+eltIpNetToMediaUnnumberedChildIfIndex OBJECT-TYPE
+    SYNTAX     INTEGER (0..2147483647)
+    MAX-ACCESS read-only
+    STATUS     deprecated
+    DESCRIPTION
+           "The interface on which this entry's equivalence is
+            effective.  The interface identified by a particular value
+            of this index is the same interface as identified by the
+            same value of the IF-MIB's ifIndex.
+            
+            This field can only be used for ifIndex of the
+            ip unnumbered child interface."
+    ::= { eltIpNetToMediaEntry 1 }
+
+END
+
+
